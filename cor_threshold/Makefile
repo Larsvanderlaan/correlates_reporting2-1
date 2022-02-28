@@ -1,30 +1,45 @@
 ## all              : run threshold analysis and get plots
-all: clean threshold plot
+all: clean threshold  
 
-allbutclean: threshold plot
+allbutclean: threshold  
 
 ## threshold        : run threshold analysis 
 threshold:
 ifeq ($(TRIAL),$(filter $(TRIAL), moderna_mock moderna_real))
 	Rscript code/params.R D29
-  Rscript code/clean_data.R D29
+	Rscript code/clean_data.R D29
 	Rscript code/Run_Threshold_analysis.R D29
+	Rscript code/params.R D29
+	Rscript code/plotting.R D29
 	
 	Rscript code/params.R D57
 	Rscript code/clean_data.R D57
 	Rscript code/Run_Threshold_analysis.R D57
-else ifeq ($(TRIAL),$(filter $(TRIAL), janssen_trial_real janssen_pooled_mock janssen_pooled_real janssen_na_mock janssen_na_real janssen_la_mock janssen_la_real janssen_sa_mock janssen_sa_real))
-	Rscript code/params.R D29
-	Rscript code/clean_data.R D29
-	Rscript code/Run_Threshold_analysis.R D29
-	
-	Rscript code/params.R D29start1
-	Rscript code/clean_data.R D29start1
-	Rscript code/Run_Threshold_analysis.R D29start1
+	Rscript code/params.R D57
+	Rscript code/plotting.R D57
+else ifeq ($(TRIAL),$(filter $(TRIAL), janssen_trial_real janssen_pooled_mock janssen_pooled_real janssen_na_mock janssen_na_real janssen_la_mock janssen_la_real janssen_sa_mock janssen_sa_real janssen_pooled_realPsV janssen_pooled_realADCP))
+	rm -f data_clean/*.csv
+	rm -f data_clean/Thresholds_by_marker/*.csv
+	rm -f figs/simultaneous_CI/*.pdf
+	rm -f figs/pointwise_CI/*.pdf
+	rm -f figs/pointwise_CI/*.rds
+	rm -f figs/simultaneous_CI/*.rds
+	Rscript code/params.R D29IncludeNotMolecConfirmed
+	Rscript code/clean_data.R D29IncludeNotMolecConfirmed
+	Rscript code/Run_Threshold_analysis.R D29IncludeNotMolecConfirmed
+	Rscript code/params.R D29IncludeNotMolecConfirmedstart1
+	Rscript code/clean_data.R D29IncludeNotMolecConfirmedstart1
+	Rscript code/Run_Threshold_analysis.R D29IncludeNotMolecConfirmedstart1
+	Rscript code/params.R D29IncludeNotMolecConfirmed
+	Rscript code/plotting.R D29IncludeNotMolecConfirmed
+	Rscript code/params.R D29IncludeNotMolecConfirmedstart1
+	Rscript code/plotting.R D29IncludeNotMolecConfirmedstart1
 else ifeq ($(TRIAL),$(filter $(TRIAL), hvtn705))
 	Rscript code/params.R D210
 	Rscript code/clean_data.R D210
 	Rscript code/Run_Threshold_analysis.R D210
+	Rscript code/params.R D210
+	Rscript code/plotting.R D210
 endif
 
 ## data             : prepare data for analysis
@@ -47,11 +62,11 @@ ifeq ($(TRIAL),$(filter $(TRIAL), moderna_mock moderna_real))
 	Rscript code/plotting.R D29
 	Rscript code/params.R D57
 	Rscript code/plotting.R D57
-else ifeq ($(TRIAL),$(filter $(TRIAL), janssen_trial_real janssen_pooled_mock janssen_pooled_real janssen_na_mock janssen_na_real janssen_la_mock janssen_la_real janssen_sa_mock janssen_sa_real))
-	Rscript code/params.R D29
-	Rscript code/plotting.R D29
-	Rscript code/params.R D29start1
-	Rscript code/plotting.R D29start1
+else ifeq ($(TRIAL),$(filter $(TRIAL), janssen_trial_real janssen_pooled_mock janssen_pooled_real janssen_na_mock janssen_na_real janssen_la_mock janssen_la_real janssen_sa_mock janssen_sa_real janssen_pooled_realPsV janssen_pooled_realADCP))
+	Rscript code/params.R D29IncludeNotMolecConfirmed
+	Rscript code/plotting.R D29IncludeNotMolecConfirmed
+	Rscript code/params.R D29IncludeNotMolecConfirmedstart1
+	Rscript code/plotting.R D29IncludeNotMolecConfirmedstart1
 else ifeq ($(TRIAL),$(filter $(TRIAL), hvtn705))
 	Rscript code/params.R D210
 	Rscript code/plotting.R D210

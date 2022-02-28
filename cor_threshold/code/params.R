@@ -4,7 +4,7 @@
 renv::activate(project = here::here(".."))
 source(here::here("..", "_common.R"))
 #-----------------------------------------------
-print("ADE")
+ 
 TRIAL <- Sys.getenv("TRIAL") 
 
 ### #####
@@ -68,7 +68,7 @@ marker_to_assay <- sapply(markers, function(v) {
 data_name_updated <- sub(".csv", "_with_riskscore.csv", data_name)
 if (file.exists(here::here("..", "data_clean", data_name_updated))) {
   add_risk_score <- T
-  covariates <- c("MinorityInd", "HighRiskInd", "risk_score") # , "BRiskScore") # Add "age"?
+  covariates <- c( "risk_score", "Region") # , "BRiskScore") # Add "age"?
   
 } else {
   add_risk_score <- F

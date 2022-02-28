@@ -82,7 +82,7 @@ moderna_real: &moderna_real
 
 moderna_mock: &moderna_mock
   <<: *moderna_trial
-  data_cleaned: NA
+  data_cleaned: moderna_mock_data_processed_with_riskscore.csv
   study_name: MockCOVE
   num_boot_replicates: 10
   num_perm_replicates: 10

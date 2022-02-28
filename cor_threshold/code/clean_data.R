@@ -42,7 +42,7 @@ for (a in assays) {
   ##### Discretize time grid
   
   max_t <- max(data[data$EventIndPrimary==1 & data$Trt == 1 & data$ph2 == 1, "EventTimePrimary" ])
-  size_time_grid <- 15
+  size_time_grid <- 25
   time_grid <- unique(sort(c(max_t ,quantile(data$Ttilde[data$Ttilde <= max_t + 5 & data$TwophasesampInd ==1 & !is.na(data$Delta)& data$Delta==1 ], seq(0,1, length = size_time_grid)))))
   time_grid[which.min(abs(time_grid -max_t))[1]] <- max_t
   time_grid <- sort(unique(time_grid))

@@ -4,7 +4,7 @@ library(dplyr)
 library(kyotil)
 library(marginalizedRisk)
 library(survival)
-    
+Sys.setenv(TRIAL="moderna_mock") 
 # disable lower level parallelization in favor of higher level of parallelization
 library(RhpcBLASctl)
 blas_get_num_procs()
@@ -37,7 +37,10 @@ config <- config::get(config = Sys.getenv("TRIAL"))
 for(opt in names(config)){
   eval(parse(text = paste0(names(config[opt])," <- config[[opt]]")))
 }
-
+print("hi")
+print(Sys.getenv("TRIAL"))
+print(names(config))
+print(study_name)
 # correlates analyses-related config
 if (exists("COR")) {
     myprint(COR)

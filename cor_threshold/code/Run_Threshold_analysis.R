@@ -81,21 +81,21 @@ run_threshold_analysis <- function(marker, direction = "above") {
    print("HERE")
   if(direction=="above") {
     print(thresholds)
-      #esttmle_full <- survivalThresh(as.data.table(data_full), trt = marker, Ttilde = "Ttilde",Delta = "Delta", J = "J", covariates = covariates, target_times = unique(data_full$target_time),cutoffs_A = thresholds, cutoffs_J = 1, type_J = "equal", lrnr =lrnr, lrnr_A = lrnr_A, lrnr_N = lrnr_N, lrnr_C = lrnr_C, biased_sampling_group= NULL, biased_sampling_indicator = "TwophasesampInd", weights_var = "wt", monotone_decreasing = T, ngrid_A = ngrid_A )
-      node_list <- list("W" = covariates, "A" = marker, "Y" = "Delta", weights = "wt")
-      lrnr <- Lrnr_sl$new(learners = Stack$new(
-         Lrnr_glmnet$new(),
-         Lrnr_gam$new(),
-         Lrnr_earth$new(),
-         Lrnr_mean$new()
-       ), metalearner = Lrnr_cv_selector$new(loss_loglik_binomial))
-       
-      esttmle_full <- thresholdTMLE(data_full, node_list, thresholds = thresholds, biased_sampling_strata = NULL, biased_sampling_indicator = "TwophasesampInd", 
-                                    lrnr_A = lrnr
-                                      , lrnr_Y = lrnr
-                                    , lrnr_Delta = Lrnr_glmnet$new(), monotone_decreasing = TRUE) 
-        
-  
+       esttmle_full <- survivalThresh(as.data.table(data_full), trt = marker, Ttilde = "Ttilde",Delta = "Delta", J = "J", covariates = covariates, target_times = unique(data_full$target_time),cutoffs_A = thresholds, cutoffs_J = 1, type_J = "equal", lrnr =lrnr, lrnr_A = lrnr_A, lrnr_N = lrnr_N, lrnr_C = lrnr_C, biased_sampling_group= NULL, biased_sampling_indicator = "TwophasesampInd", weights_var = "wt", monotone_decreasing = T, ngrid_A = ngrid_A )
+      # node_list <- list("W" = covariates, "A" = marker, "Y" = "Delta", weights = "wt")
+      # lrnr <- Lrnr_sl$new(learners = Stack$new(
+      #    Lrnr_glmnet$new(),
+      #    Lrnr_gam$new(),
+      #    
+      #    Lrnr_mean$new()
+      #  ), metalearner = Lrnr_cv_selector$new(loss_loglik_binomial))
+      #  lrnr <- Lrnr_earth$new()
+      # esttmle_full <- thresholdTMLE(data_full, node_list, thresholds = thresholds, biased_sampling_strata = NULL, biased_sampling_indicator = "TwophasesampInd", 
+      #                               lrnr_A = lrnr
+      #                                 , lrnr_Y = lrnr
+      #                               , lrnr_Delta = Lrnr_glmnet$new(), monotone_decreasing = TRUE) 
+      #   
+      # 
   } else if(direction=="below") {
     stop("NO longer used")
       thresholds <- thresholds[-1]

@@ -16,7 +16,11 @@ message("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ running cor_threshold report ~~~~~~~~~~~
 
 
 ```{r setup, include=FALSE}
-Sys.setenv(TRIAL="janssen_trial_real")
+TRIAL <- "janssen_pooled_real"
+Sys.setenv(TRIAL=TRIAL)
+#TRIAL <- Sys.getenv("TRIAL")
+ 
+
 knitr::opts_chunk$set(echo = TRUE)
 folder_var <- "cor_threshold"
 library(here)
@@ -40,8 +44,8 @@ represents the vaccine group, $S$ is the biomarker/immune-response/correlate of
 interest, and $Y$ is the indicator of infection diagnosis before the reference time point
 $t_f$, which is defined as the final observed time of an event. This parameter can be viewed as a causal/covariate-adjusted version of
 the parameter $P(Y=1 \mid S \geq s, A=1)$. Intuitively, the threshold-response
-at a given threshold is the expected probability of obtaining of acquiring HIV-1 infection diagnosis if
-one experiences a marker/immune-response value above that threshold. The variables adjusted for are: age, whether country is South Africa, BMI and baseline behavioral risk score. A
+at a given threshold is the expected probability of obtaining of acquiring COVID-19 infection diagnosis if
+one experiences a marker/immune-response value above that threshold. The variables adjusted for are: baseline behavioral risk score and region. A
 number of plots and tables are reported:
 \begin{enumerate}
 \item A plot and table with risk estimates and point-wise 95\% confidence intervals
@@ -69,13 +73,19 @@ monotone <- FALSE
 ```
 
 ```{r, echo = F, include = F}
-TRIAL <- Sys.getenv("TRIAL")
-TRIAL <- "janssen_trial_real"
+ 
 ENSEMBLE <- FALSE
 if(tolower(TRIAL) %in% c("janssen_pooled_mock", "janssen_pooled_real", "janssen_na_mock", "janssen_na_real", "janssen_la_mock", "janssen_la_real", "janssen_sa_mock", 'janssen_sa_real', "janssen_trial_real")) {
   ENSEMBLE <- TRUE
   
-  keys <-  c("D29", "D29start1") 
+  keys <-  c("D29", "D29IncludeNotMolecConfirmedstart1") 
+ 
+}
+
+if((TRIAL) %in% c("janssen_pooled_realPsV", "janssen_pooled_realADCP", "janssen_pooled_real" )) {
+  ENSEMBLE <- TRUE
+  
+  keys <-  c("D29IncludeNotMolecConfirmed", "D29IncludeNotMolecConfirmedstart1") 
  
 }
 
@@ -101,7 +111,7 @@ for(short_key in keys){
   config.cor <- config::get(config = COR)
   day <- config.cor$tpeak
   tpeak <- config.cor$tpeak
-  countAfter1 <- COR == "D29start1"
+  countAfter1 <- COR == "D29IncludeNotMolecConfirmedstart1"
   
   assays <- config$assays
   time <- paste0("Day", tpeak)
@@ -183,7 +193,7 @@ for(short_key in keys){
   config.cor <- config::get(config = COR)
   day <- config.cor$tpeak
   tpeak <- config.cor$tpeak
-  countAfter1 <- COR == "D29start1"
+  countAfter1 <- COR == "D29IncludeNotMolecConfirmedstart1"
   
   assays <- config$assays
   time <- paste0("Day", tpeak)
