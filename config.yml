@@ -82,7 +82,7 @@ moderna_real: &moderna_real
 
 moderna_mock: &moderna_mock
   <<: *moderna_trial
-  data_cleaned: moderna_mock_data_processed_with_riskscore.csv
+  data_cleaned: NA
   study_name: MockCOVE
   num_boot_replicates: 10
   num_perm_replicates: 10
@@ -155,7 +155,8 @@ janssen_trial_realPsV: &janssen_trial_realPsV
 
 janssen_pooled_realbAb:
   <<: *janssen_trial_realbAb
-  data_cleaned: /trials/covpn/p3003/analysis/correlates/Part_A_Blinded_Phase_Data/adata/janssen_pooled_realbAb_data_processed_with_riskscore.csv
+  data_cleaned: ../data_clean/janssen_pooled_realbAb_data_processed_with_riskscore.csv
+  #data_cleaned: /trials/covpn/p3003/analysis/correlates/Part_A_Blinded_Phase_Data/adata/janssen_pooled_realbAb_data_processed_with_riskscore.csv
   subset_variable: None
   subset_value: All
   covariates_riskscore: ~.+ risk_score + as.factor(Region)
@@ -163,7 +164,8 @@ janssen_pooled_realbAb:
 
 janssen_pooled_realPsV:
   <<: *janssen_trial_realPsV
-  data_cleaned: /trials/covpn/p3003/analysis/correlates/Part_A_Blinded_Phase_Data/adata/janssen_pooled_realPsV_data_processed_with_riskscore.csv
+  data_cleaned: ../data_clean/janssen_pooled_realPsV_data_processed_with_riskscore.csv
+  #data_cleaned: /trials/covpn/p3003/analysis/correlates/Part_A_Blinded_Phase_Data/adata/janssen_pooled_realPsV_data_processed_with_riskscore.csv
   subset_variable: None
   subset_value: All
   covariates_riskscore: ~.+ risk_score + as.factor(Region)
@@ -171,7 +173,8 @@ janssen_pooled_realPsV:
 
 janssen_pooled_realADCP:
   <<: *janssen_trial_realADCP
-  data_cleaned: /trials/covpn/p3003/analysis/correlates/Part_A_Blinded_Phase_Data/adata/janssen_pooled_realADCP_data_processed_with_riskscore.csv
+  data_cleaned: ../data_clean/janssen_pooled_realADCP_data_processed_with_riskscore.csv
+  #data_cleaned: /trials/covpn/p3003/analysis/correlates/Part_A_Blinded_Phase_Data/adata/janssen_pooled_realADCP_data_processed_with_riskscore.csv
   subset_variable: None
   subset_value: All
   covariates_riskscore: ~.+ risk_score + as.factor(Region)

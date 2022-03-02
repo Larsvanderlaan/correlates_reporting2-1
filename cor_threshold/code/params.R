@@ -17,7 +17,7 @@ TRIAL <- Sys.getenv("TRIAL")
 # Right-censoring is taken into account for  this analysis.
 covariate_adjusted <- T #### Estimate threshold-response function with covariate adjustment
 fast_analysis <- F ### Perform a fast analysis using glmnet at cost of accuracy
-super_fast_analysis <- F
+super_fast_analysis <-F
 threshold_grid_size <- 30 ### Number of thresholds to estimate (equally spaced in quantiles). Should be 15 at least for the plots of the threshold-response and its inverse to be representative of the true functions.
 plotting_assay_label_generator <- function(marker, above = T) {
   if(above) {
@@ -63,7 +63,7 @@ marker_to_assay <- sapply(markers, function(v) {
  
 
  max_t <- max(dat.mock[dat.mock$EventIndPrimary==1 & dat.mock$Trt == 1 & dat.mock$ph2 == 1, "EventTimePrimary" ])
- 
+ max_t <- tfinal.tpeak
 # Covariates to adjust for. SHOULD BE AT LEAST TWO VARIABLES OR GLMNET WILL ERROR
 data_name_updated <- sub(".csv", "_with_riskscore.csv", data_name)
 if (file.exists(here::here("..", "data_clean", data_name_updated))) {
@@ -84,8 +84,11 @@ if("risk_score" %in% covariates) {
 } else {
   append_data <- ""
 }
+mf <- (as.formula(config$covariates_riskscore))
+covariates <- all.vars(mf)[-1]
+#covariates <- c()
+print(covariates)
 
- 
 ####################
 #### Internal variables
 ###################

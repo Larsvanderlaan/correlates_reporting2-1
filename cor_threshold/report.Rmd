@@ -16,7 +16,7 @@ message("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ running cor_threshold report ~~~~~~~~~~~
 
 
 ```{r setup, include=FALSE}
-TRIAL <- "janssen_pooled_real"
+TRIAL <- "janssen_pooled_realbAb"
 Sys.setenv(TRIAL=TRIAL)
 #TRIAL <- Sys.getenv("TRIAL")
  

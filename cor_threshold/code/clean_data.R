@@ -40,11 +40,17 @@ for (a in assays) {
   
   
   ##### Discretize time grid
+  print("tpeak")
+  print(tfinal.tpeak)
+ 
+  max_t <- tfinal.tpeak   
+  upper_t <- sort(data$Ttilde[data$Ttilde >= max_t  & data$ph2 ==1  ])
+  upper_t <- max(upper_t[min(10, length(upper_t))], max_t + 10)
   
-  max_t <- max(data[data$EventIndPrimary==1 & data$Trt == 1 & data$ph2 == 1, "EventTimePrimary" ])
-  size_time_grid <- 25
-  time_grid <- unique(sort(c(max_t ,quantile(data$Ttilde[data$Ttilde <= max_t + 5 & data$TwophasesampInd ==1 & !is.na(data$Delta)& data$Delta==1 ], seq(0,1, length = size_time_grid)))))
+  size_time_grid <- 35
+  time_grid <- unique(sort(c(quantile(data$Ttilde[data$Ttilde <= upper_t & data$ph2 ==1  ], seq(0,1, length = size_time_grid))))) #& !is.na(data$Delta)& data$Delta==1 
   time_grid[which.min(abs(time_grid -max_t))[1]] <- max_t
+  time_grid <- c(time_grid, round((upper_t - max_t)/2))
   time_grid <- sort(unique(time_grid))
   
   Ttilde_discrete <- findInterval(data$Ttilde, time_grid, all.inside = TRUE)

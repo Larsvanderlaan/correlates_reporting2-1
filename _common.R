@@ -4,7 +4,7 @@ library(dplyr)
 library(kyotil)
 library(marginalizedRisk)
 library(survival)
-Sys.setenv(TRIAL="moderna_mock") 
+#Sys.setenv(TRIAL="janssen_pooled_realADCP") 
 # disable lower level parallelization in favor of higher level of parallelization
 library(RhpcBLASctl)
 blas_get_num_procs()

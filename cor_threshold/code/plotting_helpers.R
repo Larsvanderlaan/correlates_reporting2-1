@@ -39,7 +39,8 @@ get_plot <- function(marker, simultaneous_CI = F, monotone = F, above = TRUE) {
   
  
   risks = 1 - exp(-predict(fit.risk, newdata=tmp, type="expected"))
-  risk_plac <- round(mean(risks),3)
+  #risk_plac <- round(mean(risks),3)
+  risk_plac <- round(prev.plac,3)
  
   key <- marker
   if(above){

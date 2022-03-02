@@ -117,13 +117,15 @@ target_N <- function(data, likelihoods, fits, node_list, target_times, n_full_sa
   
   #print(quantile(likelihoods$N))
   survs <- compute_survival_functions(likelihoods, nt)
-  surv_C <- hazard_to_survival(likelihoods$C, nt = nt, left = T)
+  #print(head(as.matrix(matrix(likelihoods$C, ncol =nt))))
+   
+  surv_C <- pmax(0.005,hazard_to_survival(likelihoods$C, nt = nt, left = T))
+  print("SurvCCCC")
+  print(quantile(surv_C))
+  
   Ft <- survs$Ft
   St <-  survs$St 
- print("St")
-  print(quantile(St))
-print("Ft")
-  print(quantile(Ft))
+  
   #stop("hi")
   Ft <- lapply(1:ncol(Ft), function(i) {
     v <- Ft[,i]
@@ -137,17 +139,14 @@ print("Ft")
     return(do.call(cbind, Hv))
   })
   Ft <- do.call(cbind, Ft)
-  print("Ft")
-  print(quantile(Ft))
+  
   H <-  Ft /surv_C
-  print("C")
-  print(quantile(surv_C))
+  
   H_list <- list()
   for(i in 1:ncol(likelihoods$outcomes_A)) {
+     
     g <- pmax(likelihoods$A[[i]],0.00025)
-    print("g")
-    print(quantile(g))
-    print(table(likelihoods$outcomes_A[[i]]))
+     
     H_list[[i]] <- H*(likelihoods$outcomes_A[[i]]/g)
   }
   H <- as.matrix(do.call(cbind,H_list))
@@ -205,12 +204,15 @@ print("Ft")
   direction <- direction*D_weights
   direction <- direction / sqrt(mean(direction^2))#sqrt(mean(D_weights^2))
   direction[is.na(direction)|is.infinite(direction)] <- 0
+  print("HHHHHHHHHHh")
+  print(quantile(H))
   H <- bound(H, c(-250,250))
   H_orig <- H
 
   H <- H %*% direction
   keep <- data$at_risk==1
   lik_N <- bound(likelihoods$N[keep], 0.0000001)
+   
   dNt_train <- dNt[keep]
   H_train <- H[keep,]
   if(!is.null(node_list$weights)) {
@@ -236,7 +238,7 @@ print("Ft")
     method = "Brent"
   )
   epsilon <- optim_fit$par
-  print(quantile(abs(H)))
+  
   print("EPSILON")
   print(epsilon)
   beta <- coef(glm(Y~ H_train - 1, data = list(Y = dNt_train, H_train = H_train), offset = qlogis(lik_N), family = binomial(), weights = weights))
@@ -252,8 +254,7 @@ print("Ft")
   # }
 
   likelihoods$N <- plogis(qlogis(bound(likelihoods$N, 0.0000001)) + as.vector(H) * epsilon )
-    print("N uantiles")
-  print(quantile(likelihoods$N))
+    
   #print(quantile(H))
   full_epsilon <- epsilon * direction
   fits$epsilons_N <-c(fits$epsilons_N, list(full_epsilon))

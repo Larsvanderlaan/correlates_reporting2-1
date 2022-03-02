@@ -103,8 +103,7 @@ survivalThresh <- function(data, covariates, trt = "A", Ttilde = "Ttilde", Delta
   fits <- fit_likelihood(data, node_list, grid, cutoffs_A, cutoffs_J, lrnr = lrnr, lrnr_A = lrnr_A, lrnr_C = lrnr_C, lrnr_N = lrnr_N, lrnr_J = lrnr_J, type_A = type_A, type_J = type_J, verbose = verbose)
   grid <- sort(union(grid, cutoffs_A))
   fits$grid_A <- grid
-  print("NEW GRID")
-  print(length(grid))
+ 
   # Get observed data likelihoods
   if(verbose) {
     print("Computing likelihoods...")
@@ -159,8 +158,7 @@ survivalThresh <- function(data, covariates, trt = "A", Ttilde = "Ttilde", Delta
       }))
 
       Ft_W <- do.call(rbind, Ft_W_list)
-      print("Initial FTW")
-      print(head(Ft_W))
+       
 
     }
     item <- list( Ft_W)
