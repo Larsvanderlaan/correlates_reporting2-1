@@ -36,6 +36,7 @@ data_clean/verification/dat_clean_specifications.utf8.md
 data_clean/verification/dat_clean_specifications.tex
 data_clean/practice_data.zip
 data_raw/data_raw.zip
+data_clean/*.csv
 cor_coxph/output/D29/cutpoints_Day29bindRBD_mock
 cor_coxph/output/D29/cutpoints_Day29bindSpike_mock
 cor_coxph/output/D29/cutpoints_Day29pseudoneutid50_mock
