@@ -49,9 +49,9 @@ run_threshold_analysis <- function(marker, direction = "above") {
     require(doMC)
     registerDoMC()
     ngrid_A <- 25
-    lrnr_N <- Lrnr_hal9001_custom$new(max_degree = 2, smoothness_orders = 0, num_knots = c(20,5), reduce_basis =1e-3, formula_hal = form, fit_control = list(n_folds = 10, parallel = TRUE))
+    lrnr_N <- Lrnr_hal9001_custom$new(max_degree = 2, smoothness_orders = 0, num_knots = c(35,5), reduce_basis =1e-3, formula_hal = form, fit_control = list(n_folds = 10, parallel = TRUE))
     lrnr_C <- Lrnr_hal9001_custom$new(max_degree = 2, smoothness_orders = 0, num_knots = c(35,4), reduce_basis=1e-3,  formula_hal =  paste0("Y~h(.) + h(t,.)"), fit_control = list(n_folds = 10, parallel = TRUE))
-    lrnr_A <- Lrnr_hal9001_custom$new(max_degree = 2, smoothness_orders = 0, num_knots = c(10,4), reduce_basis=1e-3, fit_control = list(n_folds = 10, parallel = TRUE))
+    lrnr_A <- Lrnr_hal9001_custom$new(max_degree = 2, smoothness_orders = 0, num_knots = c(15,4), reduce_basis=1e-3, fit_control = list(n_folds = 10, parallel = TRUE))
     if(fast_analysis) {
      ngrid_A <- 15
         print("fast analysis")
@@ -89,16 +89,16 @@ run_threshold_analysis <- function(marker, direction = "above") {
       # lrnr <- Lrnr_sl$new(learners = Stack$new(
       #    Lrnr_glmnet$new(),
       #    Lrnr_gam$new(),
-      #    
+      # 
       #    Lrnr_mean$new()
       #  ), metalearner = Lrnr_cv_selector$new(loss_loglik_binomial))
       #  lrnr <- Lrnr_earth$new()
-      # esttmle_full <- thresholdTMLE(data_full, node_list, thresholds = thresholds, biased_sampling_strata = NULL, biased_sampling_indicator = "TwophasesampInd", 
+      # esttmle_full <- thresholdTMLE(data_full, node_list, thresholds = thresholds, biased_sampling_strata = NULL, biased_sampling_indicator = "TwophasesampInd",
       #                               lrnr_A = lrnr
       #                                 , lrnr_Y = lrnr
-      #                               , lrnr_Delta = Lrnr_glmnet$new(), monotone_decreasing = TRUE) 
-      #   
-      # 
+      #                               , lrnr_Delta = Lrnr_glmnet$new(), monotone_decreasing = TRUE)
+
+
   } else if(direction=="below") {
     stop("NO longer used")
       thresholds <- thresholds[-1]

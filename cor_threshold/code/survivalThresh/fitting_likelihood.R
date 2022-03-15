@@ -144,6 +144,7 @@ get_likelihoods <- function(fits, data, node_list, unexpanded_likelihood = NULL)
 
   lrnr_N <- fits$N
   likelihood_N <- lrnr_N$predict(task_N)
+  likelihood_N
   print("Computing C")
   task_C <- make_task_C(data, node_list, train = F,folds = folds_nt)
   lrnr_C <- fits$C

@@ -16,8 +16,8 @@ message("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ running cor_threshold report ~~~~~~~~~~~
 
 
 ```{r setup, include=FALSE}
-TRIAL <- "janssen_pooled_realbAb"
-Sys.setenv(TRIAL=TRIAL)
+TRIAL <- "janssen_la_realPsV"
+ Sys.setenv(TRIAL=TRIAL)
 #TRIAL <- Sys.getenv("TRIAL")
  
 
@@ -82,7 +82,7 @@ if(tolower(TRIAL) %in% c("janssen_pooled_mock", "janssen_pooled_real", "janssen_
  
 }
 
-if((TRIAL) %in% c("janssen_pooled_realPsV", "janssen_pooled_realADCP", "janssen_pooled_real" )) {
+if((TRIAL) %in% c("janssen_sa_realPsV", "janssen_pooled_realbAb", "janssen_pooled_realADCP", "janssen_pooled_realPsV",  "janssen_na_realbAb", "janssen_na_realADCP", "janssen_na_realPsV", "janssen_la_realbAb", "janssen_la_realADCP", "janssen_la_realPsV", "janssen_sa_realbAb", "janssen_sa_realADCP"  )) {
   ENSEMBLE <- TRUE
   
   keys <-  c("D29IncludeNotMolecConfirmed", "D29IncludeNotMolecConfirmedstart1") 

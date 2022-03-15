@@ -183,7 +183,7 @@ janssen_pooled_realADCP:
 
 janssen_na_realbAb:
   <<: *janssen_trial_realbAb
-  data_cleaned: /trials/covpn/p3003/analysis/correlates/Part_A_Blinded_Phase_Data/adata/janssen_na_realbAb_data_processed_with_riskscore.csv
+  data_cleaned: ../data_clean/janssen_na_realbAb_data_processed_with_riskscore.csv
   subset_variable: Region
   subset_value: 0
   covariates_riskscore: ~.+ risk_score
@@ -191,7 +191,7 @@ janssen_na_realbAb:
 
 janssen_na_realPsV:
   <<: *janssen_trial_realPsV
-  data_cleaned: /trials/covpn/p3003/analysis/correlates/Part_A_Blinded_Phase_Data/adata/janssen_na_realPsV_data_processed_with_riskscore.csv
+  data_cleaned: ../data_clean/janssen_na_realPsV_data_processed_with_riskscore.csv
   subset_variable: Region
   subset_value: 0
   covariates_riskscore: ~.+ risk_score
@@ -199,7 +199,7 @@ janssen_na_realPsV:
 
 janssen_na_realADCP:
   <<: *janssen_trial_realADCP
-  data_cleaned: /trials/covpn/p3003/analysis/correlates/Part_A_Blinded_Phase_Data/adata/janssen_na_realADCP_data_processed_with_riskscore.csv
+  data_cleaned: ../data_clean/janssen_na_realADCP_data_processed_with_riskscore.csv
   subset_variable: Region
   subset_value: 0
   covariates_riskscore: ~.+ risk_score
@@ -208,7 +208,7 @@ janssen_na_realADCP:
 
 janssen_la_realbAb:
   <<: *janssen_trial_realbAb
-  data_cleaned: /trials/covpn/p3003/analysis/correlates/Part_A_Blinded_Phase_Data/adata/janssen_la_realbAb_data_processed_with_riskscore.csv
+  data_cleaned: ../data_clean/janssen_la_realbAb_data_processed_with_riskscore.csv
   subset_variable: Region
   subset_value: 1
   covariates_riskscore: ~.+ risk_score
@@ -216,7 +216,7 @@ janssen_la_realbAb:
 
 janssen_la_realPsV:
   <<: *janssen_trial_realPsV
-  data_cleaned: /trials/covpn/p3003/analysis/correlates/Part_A_Blinded_Phase_Data/adata/janssen_la_realPsV_data_processed_with_riskscore.csv
+  data_cleaned: ../data_clean/janssen_la_realPsV_data_processed_with_riskscore.csv
   subset_variable: Region
   subset_value: 1
   covariates_riskscore: ~.+ risk_score
@@ -224,7 +224,7 @@ janssen_la_realPsV:
 
 janssen_la_realADCP:
   <<: *janssen_trial_realADCP
-  data_cleaned: /trials/covpn/p3003/analysis/correlates/Part_A_Blinded_Phase_Data/adata/janssen_la_realADCP_data_processed_with_riskscore.csv
+  data_cleaned: ../data_clean/janssen_la_realADCP_data_processed_with_riskscore.csv
   subset_variable: Region
   subset_value: 1
   covariates_riskscore: ~.+ risk_score
@@ -233,7 +233,7 @@ janssen_la_realADCP:
 
 janssen_sa_realbAb:
   <<: *janssen_trial_realbAb
-  data_cleaned: /trials/covpn/p3003/analysis/correlates/Part_A_Blinded_Phase_Data/adata/janssen_sa_realbAb_data_processed_with_riskscore.csv
+  data_cleaned: ../data_clean/janssen_sa_realbAb_data_processed_with_riskscore.csv
   subset_variable: Region
   subset_value: 2
   covariates_riskscore: ~.+ risk_score
@@ -241,7 +241,7 @@ janssen_sa_realbAb:
 
 janssen_sa_realPsV:
   <<: *janssen_trial_realPsV
-  data_cleaned: /trials/covpn/p3003/analysis/correlates/Part_A_Blinded_Phase_Data/adata/janssen_sa_realPsV_data_processed_with_riskscore.csv
+  data_cleaned: ../data_clean/janssen_sa_realPsV_data_processed_with_riskscore.csv
   subset_variable: Region
   subset_value: 2
   covariates_riskscore: ~.+ risk_score
@@ -249,7 +249,7 @@ janssen_sa_realPsV:
 
 janssen_sa_realADCP:
   <<: *janssen_trial_realADCP
-  data_cleaned: /trials/covpn/p3003/analysis/correlates/Part_A_Blinded_Phase_Data/adata/janssen_sa_realADCP_data_processed_with_riskscore.csv
+  data_cleaned: ../data_clean/janssen_sa_realADCP_data_processed_with_riskscore.csv
   subset_variable: Region
   subset_value: 2
   covariates_riskscore: ~.+ risk_score

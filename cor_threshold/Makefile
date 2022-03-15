@@ -18,7 +18,7 @@ ifeq ($(TRIAL),$(filter $(TRIAL), moderna_mock moderna_real))
 	Rscript code/Run_Threshold_analysis.R D57
 	Rscript code/params.R D57
 	Rscript code/plotting.R D57
-else ifeq ($(TRIAL),$(filter $(TRIAL), janssen_pooled_realbAb janssen_trial_real janssen_pooled_mock janssen_pooled_real janssen_na_mock janssen_na_real janssen_la_mock janssen_la_real janssen_sa_mock janssen_sa_real janssen_pooled_realPsV janssen_pooled_realADCP))
+else ifeq ($(TRIAL),$(filter $(TRIAL), janssen_la_realbAb janssen_la_realPsV janssen_sa_realPsV janssen_sa_realbAb janssen_na_realbAb janssen_na_realPsV janssen_pooled_realbAb janssen_trial_real janssen_pooled_mock janssen_pooled_real janssen_na_mock janssen_na_real janssen_la_mock janssen_la_real janssen_sa_mock janssen_sa_real janssen_pooled_realPsV janssen_pooled_realADCP))
 	rm -f data_clean/*.csv
 	rm -f data_clean/Thresholds_by_marker/*.csv
 	rm -f figs/simultaneous_CI/*.pdf

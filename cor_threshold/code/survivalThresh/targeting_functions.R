@@ -125,8 +125,9 @@ target_N <- function(data, likelihoods, fits, node_list, target_times, n_full_sa
   
   Ft <- survs$Ft
   St <-  survs$St 
+  print(colMeans(matrix(St,ncol = nt)))
   
-  #stop("hi")
+   #stop("hi")
   Ft <- lapply(1:ncol(Ft), function(i) {
     v <- Ft[,i]
     v <- matrix(v, ncol = nt)

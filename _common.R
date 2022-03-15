@@ -37,10 +37,7 @@ config <- config::get(config = Sys.getenv("TRIAL"))
 for(opt in names(config)){
   eval(parse(text = paste0(names(config[opt])," <- config[[opt]]")))
 }
-print("hi")
-print(Sys.getenv("TRIAL"))
-print(names(config))
-print(study_name)
+ 
 # correlates analyses-related config
 if (exists("COR")) {
     myprint(COR)

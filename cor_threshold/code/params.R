@@ -86,7 +86,6 @@ if("risk_score" %in% covariates) {
 }
 mf <- (as.formula(config$covariates_riskscore))
 covariates <- all.vars(mf)[-1]
-#covariates <- c()
 print(covariates)
 
 ####################
