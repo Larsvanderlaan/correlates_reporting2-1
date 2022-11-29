@@ -42,17 +42,22 @@ for (a in assays) {
   ##### Discretize time grid
   print("tpeak")
   print(tfinal.tpeak)
- 
+  print(tfinal.tpeak)
+  print(quantile(data$Ttilde[ data$ph2 ==1], na.rm  = T))
   max_t <- tfinal.tpeak   
   upper_t <- sort(data$Ttilde[data$Ttilde >= max_t  & data$ph2 ==1  ])
   upper_t <- max(upper_t[min(10, length(upper_t))], max_t + 10)
   
   size_time_grid <- 40
   time_grid <- unique(sort(c(quantile(data$Ttilde[data$Ttilde <= upper_t & data$ph2 ==1  ], seq(0,1, length = size_time_grid))))) #& !is.na(data$Delta)& data$Delta==1 
-  time_grid[which.min(abs(time_grid -max_t))[1]] <- max_t
-  time_grid <- c(time_grid, round((upper_t - max_t)/2))
-  time_grid <- sort(unique(time_grid))
+  time_grid <- unique(sort(c(quantile(data$Ttilde[data$Ttilde <= upper_t & data$ph2 ==1  ], seq(0,1, length = size_time_grid))))) #& !is.na(data$Delta)& data$Delta==1 
+  times_tmp <- data$Ttilde[data$Ttilde <= upper_t & data$ph2 ==1  ] 
+  time_grid <- seq(min(times_tmp),max(times_tmp), length = size_time_grid)
   
+  time_grid[which.min(abs(time_grid -max_t))[1]] <- max_t
+  time_grid <- c(time_grid, round(max_t + (upper_t - max_t)/2))
+  time_grid <- sort(unique(time_grid))
+  print(time_grid)
   Ttilde_discrete <- findInterval(data$Ttilde, time_grid, all.inside = TRUE)
   target_time <- findInterval(max_t, time_grid, all.inside = TRUE)
   print("TARGET TIMME")
@@ -60,7 +65,7 @@ for (a in assays) {
   data$Ttilde <- Ttilde_discrete
   data$target_time <- target_time
   data$J <- 1
-  
+  #stop("hi")
   
   ####
   # Subset data
@@ -126,6 +131,8 @@ for (a in assays) {
       #print(min(data_secondstage[[marker]], na.rm = TRUE))
       
       thresh_grid <- sort(unique(thresh_grid))
+      max_thresh <- quantile(data_secondstage[[marker]], 0.96)
+      thresh_grid <- thresh_grid[thresh_grid<= max_thresh]
     } else {
       
       thresh_grid <- sort(unique(data_secondstage[[marker]]))

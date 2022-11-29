@@ -158,7 +158,10 @@ survivalThresh <- function(data, covariates, trt = "A", Ttilde = "Ttilde", Delta
       }))
 
       Ft_W <- do.call(rbind, Ft_W_list)
-       
+      print("initial estimates")
+      print(apply(Ft_W, 2, function(v) {
+        mean(v)
+      }))
 
     }
     item <- list( Ft_W)
@@ -167,7 +170,7 @@ survivalThresh <- function(data, covariates, trt = "A", Ttilde = "Ttilde", Delta
 
   }
   likelihoods$initialFtW <- initial_FtW_estimates
-
+ 
   # Do J Targeting
   final_output <- list()
   for(t in target_times) {
@@ -201,6 +204,8 @@ survivalThresh <- function(data, covariates, trt = "A", Ttilde = "Ttilde", Delta
       for(i in 1:max_iter){
 
         out <- target_N(data, out$likelihoods, out$fits, node_list, target_times = target_times, max_eps = max_eps, n_full_sample = n_full_sample)
+        print("here")
+        print(apply(as.matrix(out$likelihoods$N),2, quantile))
         if(out$converged) {
           break
         }

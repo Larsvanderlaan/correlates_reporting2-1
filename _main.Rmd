@@ -113,10 +113,10 @@ message("~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ running cor_threshold report ~~~~~~~~~~~
 
 
 ```{r setup, include=FALSE}
-#TRIAL <- "janssen_pooled_realADCP"
-#Sys.setenv(TRIAL=TRIAL)
-#TRIAL <- Sys.getenv("TRIAL")
- 
+#TRIAL <- "profiscov_lvmn"
+ #Sys.setenv(TRIAL=TRIAL)
+TRIAL <- Sys.getenv("TRIAL")
+# print("TRIAL")
 
 knitr::opts_chunk$set(echo = TRUE)
 folder_var <- "cor_threshold"
@@ -169,24 +169,36 @@ monotone <- FALSE
 
 ```
 
+```{r}
+print(TRIAL)
+```
 ```{r, echo = F, include = F}
- 
+# TRIAL <- Sys.getenv("TRIAL")
 ENSEMBLE <- FALSE
-if(tolower(TRIAL) %in% c("janssen_pooled_mock", "janssen_pooled_real", "janssen_na_mock", "janssen_na_real", "janssen_la_mock", "janssen_la_real", "janssen_sa_mock", 'janssen_sa_real', "janssen_trial_real")) {
+print(TRIAL)
+if(tolower(TRIAL) %in% tolower(c("janssen_pooled_mock", "janssen_pooled_real", "janssen_na_mock", "janssen_na_real", "janssen_la_mock", "janssen_la_real", "janssen_sa_mock", 'janssen_sa_real', "janssen_trial_real", "janssen_pooled_partA" ,"janssen_na_partA", "janssen_la_partA", "janssen_sa_partA"))) {
   ENSEMBLE <- TRUE
   
-  keys <-  c("D29", "D29IncludeNotMolecConfirmedstart1") 
- 
+  keys <-  c( "D29IncludeNotMolecConfirmed") 
+ print(keys)
+} 
+
+if(tolower(TRIAL) %in% tolower(c(" janssen_pooled_EUA", "janssen_na_EUA", "janssen_la_EUA", "janssen_sa_EUA"))) { 
+  keys <- c("D29IncludeNotMolecConfirmed", "SevereD29IncludeNotMolecConfirmed", "D29IncludeNotMolecConfirmedstart1")
 }
 
-if((TRIAL) %in% c("janssen_sa_realPsV", "janssen_pooled_realbAb", "janssen_pooled_realADCP", "janssen_pooled_realPsV",  "janssen_na_realbAb", "janssen_na_realADCP", "janssen_na_realPsV", "janssen_la_realbAb", "janssen_la_realADCP", "janssen_la_realPsV", "janssen_sa_realbAb", "janssen_sa_realADCP"  )) {
+if((TRIAL) %in% c("azd1222", "azd1222_bAb")) {
+  keys <- c("D29", "D57")
+}
+
+if((TRIAL) %in% c("janssen_sa_realPsV", "janssen_pooled_realbAb", "janssen_pooled_realADCP", "janssen_pooled_realPsV",  "janssen_na_realbAb", "janssen_na_realADCP", "janssen_na_realPsV", "janssen_la_realbAb", "janssen_la_realADCP", "janssen_la_realPsV", "janssen_sa_realbAb", "janssen_sa_realADCP" , "janssen_pooled_real" )) {
   ENSEMBLE <- TRUE
   
   keys <-  c("D29IncludeNotMolecConfirmed", "D29IncludeNotMolecConfirmedstart1") 
  
 }
 
-if(tolower(TRIAL) %in% c("hvtn705")) {
+if(tolower(TRIAL) %in% c("hvtn705", "hvtn705secondprimary", "hvtn705second")) {
   keys <- c("D210") 
 }
 
@@ -194,6 +206,17 @@ if(tolower(TRIAL) %in% c("hvtn705")) {
 if(tolower(TRIAL) %in% c("moderna_mock", 
 "moderna_real")) {
   keys <- c("D29", "D57") 
+}
+
+if(tolower(TRIAL) %in% c("prevent19")) {
+  keys <- c("D35") 
+}
+
+if(tolower(TRIAL) %in% c("profiscov")) {
+  keys <- c("D43", "D43start48", "D91") 
+}
+if(tolower(TRIAL) %in% c("profiscov_lvmn")) {
+  keys <- c("D43") 
 }
 
 
@@ -204,6 +227,7 @@ if(tolower(TRIAL) %in% c("moderna_mock",
  
  
 for(short_key in keys){
+   monotone <- FALSE
   COR <- strsplit(short_key, "_")[[1]][1]
   config.cor <- config::get(config = COR)
   day <- config.cor$tpeak
@@ -223,9 +247,9 @@ for(short_key in keys){
     title <- paste0(title, " (monotone-corrected)")
   }
   if(countAfter1) {
-    title <- paste0(title, " (events after 1 day post dose)")
+    title <- paste0(title, " (events after 1 days post Day29)")
   } else {
-    
+    title <- paste0(title, " (events after 7 days post Day29)")
   }
   cat("##", title, "\n")
    
@@ -256,9 +280,9 @@ for(short_key in keys){
     title <- paste0(title, " (monotone-corrected)")
   }
   if(countAfter1) {
-    title <- paste0(title, " (events after 1 day post dose)")
+    title <- paste0(title, " (events after 1 days post Day29)")
   } else {
-    
+    title <- paste0(title, " (events after 7 days post Day29)")
   }
   cat("##", title, "\n")
    
@@ -286,6 +310,7 @@ for(short_key in keys){
 ci <- "simultaneous"
 
 for(short_key in keys){
+   monotone <- FALSE
   COR <- strsplit(short_key, "_")[[1]][1]
   config.cor <- config::get(config = COR)
   day <- config.cor$tpeak
@@ -303,9 +328,9 @@ for(short_key in keys){
     title <- paste0(title, " (monotone-corrected)")
   }
   if(countAfter1) {
-    title <- paste0(title, " (events after 1 day post dose)")
+    title <- paste0(title, " (events after 1 days post Day29)")
   } else {
-    
+    title <- paste0(title, " (events after 7 days post Day29)")
   }
   cat("##", title, "\n")
   
@@ -330,9 +355,9 @@ for(short_key in keys){
     title <- paste0(title, " (monotone-corrected)")
   }
   if(countAfter1) {
-    title <- paste0(title, " (events after 1 day post dose)")
+    title <- paste0(title, " (events after 1 days post Day29)")
   } else {
-    
+    title <- paste0(title, " (events after 7 days post Day29)")
   }
   cat("##", title, "\n")
    

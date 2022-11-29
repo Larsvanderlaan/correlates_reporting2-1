@@ -101,7 +101,8 @@ get_likelihoods <- function(fits, data, node_list, unexpanded_likelihood = NULL)
 
       task_A <- make_task_A(data, node_list, cutoff = cutoff_A, train = F, folds = folds_nt, type = fits$type_A)
       lrnr_A_trained <-lrnr_A
-      predsA <- pmax(lrnr_A_trained$predict(task_A), 0.005)
+      predsA <- pmax(lrnr_A_trained$predict(task_A), 0.001)
+      
       likelihoods_A[[as.character(cutoff_A)]] <- predsA
 
       if(fits$type_A == "above") {
@@ -144,7 +145,7 @@ get_likelihoods <- function(fits, data, node_list, unexpanded_likelihood = NULL)
 
   lrnr_N <- fits$N
   likelihood_N <- lrnr_N$predict(task_N)
-  likelihood_N
+   
   print("Computing C")
   task_C <- make_task_C(data, node_list, train = F,folds = folds_nt)
   lrnr_C <- fits$C

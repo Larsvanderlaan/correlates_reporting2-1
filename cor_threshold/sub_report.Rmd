@@ -18,7 +18,7 @@ if(above) {
 }
 if(above) {
   dashed_line <- "The dashed red line marks the threshold after which no more COVID events are observed."
-  if(tolower(TRIAL) %in% c("hvtn705")) {
+  if(tolower(TRIAL) %in% c("hvtn705", "hvtn705second")) {
     dashed_line <- "The dashed red line marks the threshold after which no more HIV events are observed."
   }
 } else {
@@ -63,8 +63,8 @@ if(countAfter1) {
 ```{r, output = "asis", echo = FALSE, eval = TRUE}
  file <- (here::here(folder_var,   "figs", paste0(ci,"_CI"), paste0("TABLE_", dir_term, key0,   key, "_", ci_key, "CI", dir_term, ".rds")))
 if(!file.exists(file)) {
-  stop(key)
-  stop(file)
+  stop(paste0(file))
+ 
 }
 
 ptwise_tab_guts <- readRDS(here::here(folder_var,   "figs", paste0(ci,"_CI"), paste0("TABLE_", dir_term, key0,   key, "_", ci_key, "CI", dir_term, ".rds")))

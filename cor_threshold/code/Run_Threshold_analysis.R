@@ -44,13 +44,13 @@ run_threshold_analysis <- function(marker, direction = "above") {
         form <- paste0("Y~h(.) + h(.,.)")
 
     }
-  form <- paste0("Y~h(.) + h(t,.)  + h(A,.)")
+  form <- paste0("Y~h(.) + h(t,.)")
     print(form)
     require(doMC)
     registerDoMC()
     ngrid_A <- 25
-    lrnr_N <- Lrnr_hal9001_custom$new(max_degree = 2, smoothness_orders = 0, num_knots = c(35,5), reduce_basis =1e-3, formula_hal = form, fit_control = list(n_folds = 10, parallel = TRUE))
-    lrnr_C <- Lrnr_hal9001_custom$new(max_degree = 2, smoothness_orders = 0, num_knots = c(35,4), reduce_basis=1e-3,  formula_hal =  paste0("Y~h(.) + h(t,.)"), fit_control = list(n_folds = 10, parallel = TRUE))
+    lrnr_N <- Lrnr_hal9001_custom$new(max_degree = 2, smoothness_orders = 0, num_knots = c(40,5), reduce_basis =1e-3, formula_hal = form, fit_control = list(n_folds = 10, parallel = TRUE))
+    lrnr_C <- Lrnr_hal9001_custom$new(max_degree = 2, smoothness_orders = 0, num_knots = c(40,4), reduce_basis=1e-3,  formula_hal =  paste0("Y~h(.)  "), fit_control = list(n_folds = 10, parallel = TRUE))
     lrnr_A <- Lrnr_hal9001_custom$new(max_degree = 2, smoothness_orders = 0, num_knots = c(15,4), reduce_basis=1e-3, fit_control = list(n_folds = 10, parallel = TRUE))
     if(fast_analysis) {
      ngrid_A <- 15
@@ -70,7 +70,9 @@ run_threshold_analysis <- function(marker, direction = "above") {
         lrnr_A <- Lrnr_hal9001_custom$new(max_degree = 1, smoothness_orders = 0, num_knots = c(3,1), reduce_basis=1e-4, fit_control = list(n_folds = 10, parallel = TRUE))
         #Stack$new(Lrnr_gam$new(), Lrnr_earth$new(), Lrnr_xgboost$new(max_depth= 4), )
   }
-    
+  lrnr_N <- Lrnr_gam$new()
+  lrnr_C <- Lrnr_gam$new()
+  lrnr_A <- Lrnr_gam$new()
   thresholds <- read.csv(here::here("data_clean", "Thresholds_by_marker", paste0("thresholds_", marker, ".csv")))
   thresholds <- as.vector(unlist(thresholds[, 1]))
   #time <- marker_to_time[[marker]]
@@ -82,6 +84,7 @@ run_threshold_analysis <- function(marker, direction = "above") {
   ####################################################
    print("HERE")
   if(direction=="above") {
+     
     print(thresholds)
     
        esttmle_full <- survivalThresh(as.data.table(data_full), trt = marker, Ttilde = "Ttilde",Delta = "Delta", J = "J", covariates = covariates, target_times = unique(data_full$target_time),cutoffs_A = thresholds, cutoffs_J = 1, type_J = "equal", lrnr =lrnr, lrnr_A = lrnr_A, lrnr_N = lrnr_N, lrnr_C = lrnr_C, biased_sampling_group= NULL, biased_sampling_indicator = "TwophasesampInd", weights_var = "wt", monotone_decreasing = T, ngrid_A = ngrid_A )

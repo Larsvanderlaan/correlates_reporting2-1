@@ -31,7 +31,8 @@ get_plot <- function(marker, simultaneous_CI = F, monotone = F, above = TRUE) {
   if(TRIAL == "hvtn705") {
     form.0 =            update (form.s, as.formula(config$covariates_riskscore))
   }
- 
+  form.0 =            update (form.s, as.formula(config$covariates_riskscore))
+  
  
   fit.risk = coxph(form.0, data = tmp, model=T) # model=T is required because the type of prediction requires it, see Note on ?predict.coxph
   tmp[["time"]] <-  as.numeric(max_t)
@@ -40,7 +41,8 @@ get_plot <- function(marker, simultaneous_CI = F, monotone = F, above = TRUE) {
  
   risks = 1 - exp(-predict(fit.risk, newdata=tmp, type="expected"))
   #risk_plac <- round(mean(risks),3)
-  risk_plac <- round(prev.plac,3)
+  prev.plac <- risks
+  try({risk_plac <- round(prev.plac,3)})
  
   key <- marker
   if(above){
@@ -55,7 +57,7 @@ get_plot <- function(marker, simultaneous_CI = F, monotone = F, above = TRUE) {
   }
   time <- tpeak
   day <- ""
-  if(TRIAL == "hvtn705"){
+  if(TRIAL %in% c("hvtn705", "hvtn705second", "hvtn705secondprimary")){
     laby <- paste0("Probability of HIV by Day ",max_t)
   } else {
     laby <- paste0("Probability of COVID by Day ",max_t)
@@ -93,13 +95,21 @@ get_plot <- function(marker, simultaneous_CI = F, monotone = F, above = TRUE) {
     #main <- paste0(main, " with simultaneous confidence bands")
   }
   a <- marker_to_assay[[marker]]
-  print(marker)
+  
   print(a)
   xlim <- get.range.cor(data, a,   tpeak)
-  print(quantile(data[[marker]]))
-  print(xlim)
+   
   llod <- lloxs[a]
-  labels_info <- get.labels.x.axis.cor(xlim, lloxs[a])
+  llox_label <- config$llox_label
+  #print("LLOD")
+  #print(llod)
+  #print(llox_label)
+  #print(a)
+  #print(llox_label[a])
+  #print("END")
+  #stop("Hi")
+  #print(llox_label[a])
+  labels_info <- get.labels.x.axis.cor(xlim, lloxs[a], llox_label[[a]])
   print(labels_info)
   xx <- labels_info$ticks
   labels <- as.list(labels_info$labels)
@@ -113,7 +123,7 @@ get_plot <- function(marker, simultaneous_CI = F, monotone = F, above = TRUE) {
     scale_y_continuous(
       name = laby,
       sec.axis = sec_axis(~ . / scale_coef, name = "Reverse CDF"), n.breaks = 10
-    )  +
+    )  +  theme(axis.text.x = element_blank(), axis.ticks = element_blank()) +
     theme(plot.title = element_text(size = 25), axis.text.x = element_text(angle = 0, hjust = 1, size = 18), axis.text.y = element_text(angle = 0, hjust = 1, size = 18)) +
    # geom_hline(aes(yintercept=risk_vac), alpha = 0.4) + geom_text(alpha = 0.75,aes(median(v$data$cutoffs),risk_vac,label = "vaccine overall risk"), vjust = -0.5, size = 5) +
  geom_text(alpha = 0.75, aes(quantile(v$data$cutoffs, 0.1),min(max(v$data$upper),risk_plac),label = paste0("placebo overall risk: ", risk_plac)), vjust = 0, size = 5)+ scale_x_continuous(
@@ -124,6 +134,7 @@ get_plot <- function(marker, simultaneous_CI = F, monotone = F, above = TRUE) {
     #trans_format("ident", math_format(10^.x)),
   #limits = c(min(esttmle[, 1]) - 0.1, max(esttmle[, 1]) + 0.1)
  )
+  print(xx)
   
  if(above  && max_thresh < log10(uloqs[a]) - 0.05) {
      plot <- plot + geom_vline(xintercept = max_thresh, colour = "red", linetype = "longdash")
