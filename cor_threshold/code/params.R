@@ -1,7 +1,11 @@
 
 #-----------------------------------------------
 # obligatory to append to the top of each script
+
+ 
 renv::activate(project = here::here(".."))
+#renv::install(project = here::here(".."))
+ print("NI")
 source(here::here("..", "_common.R"))
 #-----------------------------------------------
  

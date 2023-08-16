@@ -39,9 +39,9 @@ get_plot <- function(marker, simultaneous_CI = F, monotone = F, above = TRUE) {
  
   
  
-  risks = 1 - exp(-predict(fit.risk, newdata=tmp, type="expected"))
-  #risk_plac <- round(mean(risks),3)
-  prev.plac <- risks
+  risks = mean(1 - exp(-predict(fit.risk, newdata=tmp, type="expected")))
+  risk_plac <- round(mean(risks),3)
+  
   try({risk_plac <- round(prev.plac,3)})
  
   key <- marker
@@ -78,7 +78,12 @@ get_plot <- function(marker, simultaneous_CI = F, monotone = F, above = TRUE) {
   col <- rgb(col[1], col[2], col[3], alpha = 255 * 0.4, maxColorValue = 255)
   # hist(na.omit(data_biased[[marker]]),col=col,axes=F,labels=F,main="",xlab="",ylab="",breaks=10,border=0,freq=F)
   # Get initial threshold-response plot with simultaneous CI
+  print("frfvrbvwaaaaaaa")
+  print(esttmle)
   v <- plot_threshold_response(esttmle, simultaneous_CI = simultaneous_CI, monotone = F)
+ 
+  
+  
   data_tmp <- na.omit(data[, c(marker, "Ttilde", "Delta", "wt"), drop = F])
   max_thresh <- max(data_tmp[data_tmp[["Delta"]] == 1, marker])
   # out <- hist(na.omit(data_tmp[[marker]]), col=col,axes=F,labels=F,main="",xlab="",ylab="",breaks=10,border=0,freq=F)
@@ -96,7 +101,7 @@ get_plot <- function(marker, simultaneous_CI = F, monotone = F, above = TRUE) {
   }
   a <- marker_to_assay[[marker]]
   
-  print(a)
+ 
   xlim <- get.range.cor(data, a,   tpeak)
    
   llod <- lloxs[a]
@@ -110,31 +115,32 @@ get_plot <- function(marker, simultaneous_CI = F, monotone = F, above = TRUE) {
   #stop("Hi")
   #print(llox_label[a])
   labels_info <- get.labels.x.axis.cor(xlim, lloxs[a], llox_label[[a]])
-  print(labels_info)
+ 
   xx <- labels_info$ticks
   labels <- as.list(labels_info$labels)
   
   xlimits <- xlim
-  print(xlimits)
   
-
+   
   plot <- v + ggtitle(main) +
     stat_function(fun = RCDF, color = col, geom = "area", fill = col, alpha = 0.2) +
     scale_y_continuous(
       name = laby,
       sec.axis = sec_axis(~ . / scale_coef, name = "Reverse CDF"), n.breaks = 10
     )  +  theme(axis.text.x = element_blank(), axis.ticks = element_blank()) +
-    theme(plot.title = element_text(size = 25), axis.text.x = element_text(angle = 0, hjust = 1, size = 18), axis.text.y = element_text(angle = 0, hjust = 1, size = 18)) +
-   # geom_hline(aes(yintercept=risk_vac), alpha = 0.4) + geom_text(alpha = 0.75,aes(median(v$data$cutoffs),risk_vac,label = "vaccine overall risk"), vjust = -0.5, size = 5) +
- geom_text(alpha = 0.75, aes(quantile(v$data$cutoffs, 0.1),min(max(v$data$upper),risk_plac),label = paste0("placebo overall risk: ", risk_plac)), vjust = 0, size = 5)+ scale_x_continuous(
+     theme(plot.title = element_text(size = 25), axis.text.x = element_text(angle = 0, hjust = 1, size = 18), axis.text.y = element_text(angle = 0, hjust = 1, size = 18))+ 
+ #   geom_hline(aes(yintercept=risk_vac), alpha = 0.4) + geom_text(alpha = 0.75,aes(median(v$data$cutoffs),risk_vac,label = "vaccine overall risk"), vjust = -0.5, size = 5) +
+  geom_text(alpha = 0.75, aes(quantile(v$data$cutoffs, 0.1),min(max(v$data$upper),risk_plac),label = paste0("placebo overall risk: ", risk_plac)), vjust = 0, size = 5)+ 
+    scale_x_continuous(
   breaks = xx,#union(floor(esttmle[, 1]), ceiling(esttmle[, 1])),
    labels = do.call(expression,labels),
-  name =labx,
-  limits = xlimits
+   name =labx,
+   limits = xlimits
     #trans_format("ident", math_format(10^.x)),
-  #limits = c(min(esttmle[, 1]) - 0.1, max(esttmle[, 1]) + 0.1)
- )
-  print(xx)
+   #limits = c(min(esttmle[, 1]) - 0.1, max(esttmle[, 1]) + 0.1)
+  )
+   
+  
   
  if(above  && max_thresh < log10(uloqs[a]) - 0.05) {
      plot <- plot + geom_vline(xintercept = max_thresh, colour = "red", linetype = "longdash")
@@ -144,10 +150,9 @@ get_plot <- function(marker, simultaneous_CI = F, monotone = F, above = TRUE) {
   plot
    
   data_interp <- as.data.frame(approx(plot$data$cutoffs, plot$data$est, xout = data[data$Delta==1,marker], rule = 2  ))
-    
   
   plot <- plot  +geom_point(data=data_interp,aes(x=x, y=y), colour = "blue")
-   
+  print("waaaaaaa")
     #+  geom_text(aes(x=max_thresh *(1.01), label="No observed events", y=0.002), colour="black", angle=90, text=element_text(size=11))
   append_end <- ""
   append_start <- "PLOT"

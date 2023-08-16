@@ -46,30 +46,22 @@ else ifeq ($(TRIAL),$(filter $(TRIAL), janssen_pooled_EUA janssen_na_EUA janssen
 	Rscript code/params.R D29IncludeNotMolecConfirmedstart1
 	Rscript code/plotting.R D29IncludeNotMolecConfirmedstart1
 	
-else ifeq ($(TRIAL),$(filter $(TRIAL), janssen_pooled_partA  janssen_la_partA ))
-	#Rscript code/cor_coxph.R D29IncludeNotMolecConfirmed
-	#Rscript code/cor_coxph.R D29SevereIncludeNotMolecConfirmed
-	
+else ifeq ($(TRIAL),$(filter $(TRIAL), janssen_pooled_partAsenior janssen_pooled_partAnonsenior janssen_na_partA janssen_na_partAsenior janssen_na_partAnonsenior janssen_la_partAsenior janssen_la_partAnonsenior janssen_sa_partA  janssen_sa_partAnonsenior janssen_la_partA janssen_pooled_partA)) # janssen_sa_partAsenior has too few cases
 	Rscript code/params.R D29IncludeNotMolecConfirmed
 	Rscript code/clean_data.R D29IncludeNotMolecConfirmed
 	Rscript code/Run_Threshold_analysis.R D29IncludeNotMolecConfirmed
+	
+	Rscript code/params.R D29IncludeNotMolecConfirmed
+	Rscript code/plotting.R D29IncludeNotMolecConfirmed
+	
 	
 	Rscript code/params.R D29SevereIncludeNotMolecConfirmed
 	Rscript code/clean_data.R D29SevereIncludeNotMolecConfirmed
 	Rscript code/Run_Threshold_analysis.R D29SevereIncludeNotMolecConfirmed
 	
-	Rscript code/params.R D29IncludeNotMolecConfirmed
-	Rscript code/plotting.R D29IncludeNotMolecConfirmed
 	Rscript code/params.R D29SevereIncludeNotMolecConfirmed
 	Rscript code/plotting.R D29SevereIncludeNotMolecConfirmed
-	
-else ifeq ($(TRIAL),$(filter $(TRIAL), janssen_pooled_partAsenior janssen_pooled_partAnonsenior janssen_na_partA janssen_na_partAsenior janssen_na_partAnonsenior janssen_la_partAsenior janssen_la_partAnonsenior janssen_sa_partA  janssen_sa_partAnonsenior)) # janssen_sa_partAsenior has too few cases
-	Rscript code/params.R D29IncludeNotMolecConfirmed
-	Rscript code/clean_data.R D29IncludeNotMolecConfirmed
-	Rscript code/Run_Threshold_analysis.R D29IncludeNotMolecConfirmed
-	
-	Rscript code/params.R D29IncludeNotMolecConfirmed
-	Rscript code/plotting.R D29IncludeNotMolecConfirmed
+	 
 
 else ifeq ($(TRIAL),$(filter $(TRIAL), janssen_trial_real janssen_pooled_mock janssen_pooled_real janssen_na_mock janssen_na_real janssen_la_mock janssen_la_real janssen_sa_mock janssen_sa_real janssen_pooled_realPsV janssen_pooled_realADCP))
 	rm -f data_clean/*.csv

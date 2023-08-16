@@ -1,0 +1,164 @@
+---
+title: "kernel"
+output: html_document
+date: '2023-01-24'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# Quiz section 3 : kernel density estimation in R  
+
+```{r}
+library(ggplot2)
+library(gridExtra)
+
+
+```
+
+
+## Sampling from a multivariate gaussian mixture
+
+
+```{r}
+rnormmix <- function(n, K, sigma) {
+  theta <- list(
+    mu = runif(K, 0, 1),
+    sigma = rep(sigma, K)
+    )
+   y <- sample(1:K, n, replace = TRUE)
+   x <- rnorm(n, theta$mu[y], theta$sigma[y])
+   return(x)
+}
+X <- rnormmix(n = 1000, K = 3, sigma = 0.2)
+ 
+```
+ 
+
+## Kernel density plots using the R package ggplot2
+
+
+
+```{r}
+ggplot(data.frame(X), aes(x = X)) + geom_density()
+
+
+```
+
+## Different kernel functions
+
+
+```{r}
+n <- 1000
+X <- runif(n, -2, 2)
+# Gaussian kernel
+# x - > K(X)
+kernel_gaus <- function(x) {
+  out <- exp(-x^2 / 2) / sqrt(2 * pi)
+  return(out)
+}
+plot(X, kernel_gaus(X))
+
+# Box kernel
+kernel_box <- function(x) {
+  out <- as.numeric(-1 <= x & x <= 1) / 2
+  return(out)
+}
+plot(X, kernel_box(X))
+
+# Tent kernel
+
+kernel_tent <- function(x) {
+  return( (0 <= x & x <= 1) * (1-x) + (-1 <= x & x <= 0) * (x+1))
+}
+plot(X, kernel_tent(X))
+
+
+```
+$$p_n(t)  = \frac{1}{n}\sum_{i=1}^n  h^{-1} \cdot K ((X_i - t) / h)$$
+
+
+## Code for KDE
+
+```{r}
+#set.seed(123)
+# Sample size
+n <- 1000
+# MVN mixture
+X <-  rnormmix(n, K = 1, sigma = 0.1)
+
+# Bandwidth
+h <- 0.001
+
+grid <- seq(min(X), max(X), length= 10000)
+
+# K((X - t)/ h) / h
+
+
+density_estimates <- sapply(grid, function(t, h) {
+  #X - t = c(x_1 - t, x_2 -t, ...)
+ # kernel_gaus( c(x_1 - t, x_2 -t, ...) / h)  =  c(kernel_gaus((x_1 - t) / h), kernel_gaus(x_2 -t / h), ...)) 
+  mean(kernel_gaus((X - t) / h) / h)
+}, h = h)
+
+p1 <- ggplot(data.frame(grid, density_estimates), aes(x= grid, y = density_estimates)) + geom_line()  +  theme(axis.text.x = element_text(angle = 0, vjust = 0.5)) + labs(x = "X", y= "density")
+p2 <- ggplot(data.frame(X), aes(x=X)) + geom_density()
+
+ gridExtra::grid.arrange( p1, p2)
+
+```
+
+
+
+
+ # Bivariate kernel estiamtion
+
+```{r}
+
+# Bivariate kernel
+kernel_mvngaus <- function(x) {
+  z <- colSums(x^2)
+  exp( - z / 2) / sqrt(2 * pi )^2
+}
+
+estimate_density <- function(t, h) {
+  mean(kernel((t(X) - t) / h) / h)
+}
+
+
+
+n <- 1000
+X1 <- rnormmix(n, K = 3, sigma = 0.1)
+X2 <- rnormmix(n, K = 3, sigma = 0.1)
+X <- cbind(X1,X2)
+dim(X)
+h <- 0.1
+ 
+
+
+ngrid <- 200
+grid_X1 <- seq(min(X1), max(X1), length = ngrid)
+grid_X2 <- seq(min(X2), max(X2), length = ngrid)
+grid <- expand.grid(grid_X1, grid_X2)
+ests <- apply(grid, 1, estimate_density, h = h)
+
+
+library(plotly)
+fig <- plot_ly(data.frame(grid, ests), x = ~Var1, y = ~Var2, z = ~ests, size = 0.5, alpha = 0.3)
+ 
+fig <- fig %>% add_markers()
+fig <- fig %>% layout(scene = list(xaxis = list(title = 'density'),
+                    yaxis = list(title = 'X2'),
+                    zaxis = list(title = 'X1')))
+
+
+ 
+
+fig
+
+```
+
+
+

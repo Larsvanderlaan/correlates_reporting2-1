@@ -70,9 +70,9 @@ run_threshold_analysis <- function(marker, direction = "above") {
         lrnr_A <- Lrnr_hal9001_custom$new(max_degree = 1, smoothness_orders = 0, num_knots = c(3,1), reduce_basis=1e-4, fit_control = list(n_folds = 10, parallel = TRUE))
         #Stack$new(Lrnr_gam$new(), Lrnr_earth$new(), Lrnr_xgboost$new(max_depth= 4), )
   }
-  lrnr_N <- Lrnr_gam$new()
-  lrnr_C <- Lrnr_gam$new()
-  lrnr_A <- Lrnr_gam$new()
+  # lrnr_N <- Lrnr_gam$new()
+  # lrnr_C <- Lrnr_gam$new()
+  # lrnr_A <- Lrnr_gam$new()
   thresholds <- read.csv(here::here("data_clean", "Thresholds_by_marker", paste0("thresholds_", marker, ".csv")))
   thresholds <- as.vector(unlist(thresholds[, 1]))
   #time <- marker_to_time[[marker]]

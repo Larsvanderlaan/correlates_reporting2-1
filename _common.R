@@ -1,12 +1,21 @@
 #if (exists(".DEF.COMMON")) stop ("_common.R has already been loaded") else .DEF.COMMON=TRUE
+#renv::load(project = here::here(".."))
+ 
+ # If package library load fails
+ #renv::install("https://mran.microsoft.com/snapshot/2019-12-23/src/contrib/aucm_2019.12-1.tar.gz")
+ #renv::install(project = here::here(".."))
+#renv::install("kableExtra")
+
 library(methods)
 library(dplyr)
 library(kyotil)
 library(marginalizedRisk)
 library(survival)
- 
+library(here)
+#print(getwd())
+ print(here())
 # disable lower level parallelization in favor of higher level of parallelization
-library(RhpcBLASctl)
+#library(RhpcBLASctl)
 #blas_get_num_procs()
 #blas_set_num_threads(1L)
 #stopifnot(blas_get_num_procs() == 1L) # Commented this out as it does not work as expected any more!
@@ -148,6 +157,8 @@ if (startsWith(tolower(study_name), "mock")) {
 }
 cat("Analysis-ready data: ", path_to_data, "\n")
 # if this is run under _reporting level, it will not load. Thus we only warn and not stop
+setwd("/Users/larsvanderlaan/repositories/correlates_reporting2_fork/cor_threshold")
+print(getwd())
 if (!file.exists(path_to_data)) stop ("_common.R: dataset with risk score not available ===========================================")
 
 dat.mock <- read.csv(path_to_data)
