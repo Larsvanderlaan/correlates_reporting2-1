@@ -195,8 +195,9 @@ has29 = study_name %in% c("COVE","ENSEMBLE", "MockCOVE","MockENSEMBLE")
 
 ###################################################################################################
 # read data
-
+print(TRIAL)
 data_name = paste0(TRIAL, "_data_processed.csv")
+print(data_name)
 if (startsWith(tolower(study_name), "mock")) {
   data_name_updated <- sub(".csv", "_with_riskscore.csv", data_name)
   # the path depends on whether _common.R is sourced from Rmd or from R scripts in modules
@@ -209,6 +210,7 @@ if (startsWith(tolower(study_name), "mock")) {
   # if path is relative, needs to do some processing
   if(endsWith(here::here(), "correlates_reporting2") & startsWith(path_to_data,"..")) path_to_data=substr(path_to_data, 4, nchar(path_to_data))
 }
+
 cat("Analysis-ready data: ", path_to_data, "\n")
 # if this is run under _reporting level, it will not load. Thus we only warn and not stop
 if (!file.exists(path_to_data)) stop ("_common.R: dataset with risk score not available ===========================================")
@@ -259,7 +261,10 @@ if (exists("COR")) {
   if (is.null(config.cor$tinterm)) {
 
     dat.mock$ph1=dat.mock[[config.cor$ph1]]
-    dat.mock$ph2=dat.mock[[config.cor$ph2]]
+    dat.mock$ph2<-dat.mock[[config.cor$ph2]]
+    print(config.cor$ph2)
+    print(config.cor$ph2 %in% colnames(dat.mock))
+    print(grep( "ph2", names(dat.mock), value = T))
     dat.mock$EventIndPrimary =dat.mock[[config.cor$EventIndPrimary]]
     dat.mock$EventTimePrimary=dat.mock[[config.cor$EventTimePrimary]]
     dat.mock$Wstratum=dat.mock[[config.cor$WtStratum]]
@@ -298,6 +303,7 @@ if (exists("COR")) {
     tfinal.tpeak=with(subset(dat.mock, Trt==1 & ph2), max(EventTimePrimary[EventIndPrimary==1]))
 
     # exceptions
+
     if (TRIAL == "moderna_boost") {
       tfinal.tpeak = 92 # as computed in reporting3 repo
     } else if (TRIAL == "moderna_real") {
@@ -328,6 +334,7 @@ if (exists("COR")) {
     } else if (TRIAL %in% c("janssen_partA_VL")) {
       # variant-specific tfinal.tpeak. set it to NULL so that it is not inadverdently used
       tfinal.tpeak = NULL
+
       # smaller of the two: 1) last case in ph2 in vaccine, 2) last time to have 15 at risk in subcohort vaccine arm
       tfinal.tpeak.ls=list(
         US=list(
@@ -736,7 +743,9 @@ if (!TRIAL %in% c("janssen_partA_VL", "moderna_boost")) {
 
 # create config$assay_metadata from llods etc if not existed
 if (is.null(config$assay_metadata)) {
-  assay_metadata = data.frame(assay=names(lloqs), lod=llods, lloq=lloqs, uloq=uloqs, llox_label=llox_labels)
+  assay_metadata = data.frame(assay=names(lloqs), lod=llods, lloq=lloqs, uloq=uloqs)
+  # llox_label is treated differently b/c it may not contain bindN
+  assay_metadata = cbinduneven(list(assay_metadata, llox_label=data.frame(llox_labels)))
 }
 
 

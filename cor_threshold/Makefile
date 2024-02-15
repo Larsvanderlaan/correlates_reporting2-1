@@ -16,6 +16,9 @@ ifeq ($(TRIAL),$(filter $(TRIAL), moderna_mock moderna_real))
 else ifeq ($(TRIAL),$(filter $(TRIAL), janssen_partA_VL))
 	Rscript code/params.R D29variant
 	Rscript code/run_covid_analysis.R D29variant
+
+	Rscript code/params.R D29VLancestral
+	Rscript code/run_covid_analysis.R D29VLancestral
 else ifeq ($(TRIAL),$(filter $(TRIAL), janssen_trial_EUA janssen_pooled_mock janssen_pooled_EUA janssen_na_mock janssen_na_EUA janssen_la_mock janssen_la_EUA janssen_sa_mock janssen_sa_EUA))
 	Rscript code/params.R D29
 	Rscript code/clean_data.R D29

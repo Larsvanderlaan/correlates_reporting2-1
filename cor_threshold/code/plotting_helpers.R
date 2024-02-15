@@ -17,6 +17,9 @@ plot_threshold_response <- function(results, simultaneous_CI = FALSE, monotone =
   thresholds <- results$threshold
   CI_left <- estimates - qnorm(0.975) * standard_errors
   CI_right <- estimates + qnorm(0.975) * standard_errors
+  CI_left <- pmax(CI_left, 0)
+  CI_right <- pmin(CI_right, 0.015)
+  estimates <- pmin(estimates, 0.02)
   plot_data <- data.table(thresholds = thresholds, est= estimates, se= standard_errors,
                           lower = CI_left, upper = CI_right)
 
@@ -85,9 +88,9 @@ get_plot <- function(marker, failure_time = "EventTimePrimary", event_type = "Ev
     #main <- paste0(main, " with simultaneous confidence bands")
   }
   a <- marker_to_assay[[marker]]
-  xlimits <- get.range.cor(data, a,   tpeak)
+  #xlimits <- get.range.cor(data, a,   tpeak)
   llod <- lloxs[a] #llox_labels
-  xx <- report.assay.values(data_treated[[marker]], assay)
+  #xx <- report.assay.values(data_treated[[marker]], assay)
   #labels_info <- draw.x.axis.cor(xlimits, lloxs[a], llox_labels[a], for.ggplot=T)
   #xx <- labels_info$ticks
   #labels <- as.list(labels_info$labels)
@@ -103,23 +106,27 @@ get_plot <- function(marker, failure_time = "EventTimePrimary", event_type = "Ev
     geom_text(alpha = 0.75, aes(quantile(v$data$thresholds, 0.1),min(max(v$data$upper),risk_plac),label = paste0("placebo overall risk: ", risk_plac)), vjust = 0, size = 5)+ scale_x_continuous(
       #breaks = xx,
       #labels = do.call(expression,labels),
-      name =labx,
-      limits = xlimits    )
+      name =labx)#,
+      #limits = xlimits    )
 
+  try({
   if(above  && max_thresh < log10(uloqs[a]) - 0.05) {
     plot <- plot + geom_vline(xintercept = max_thresh, colour = "red", linetype = "longdash")
   } else if(!above && risk_plac<= max(v$data$upper, na.rm = T)) {
     plot <- plot + geom_hline(aes(yintercept=risk_plac), alpha = 0.4, linetype = "longdash", colour = "red")
   }
+  })
+  plot <- plot + ggtitle(paste0(COR, "_", marker, "_", variant))
 
-  data_interp <- as.data.frame(approx(plot$data$thresholds, plot$data$est, xout = data_treated[data_treated[[event_type]]==1,marker], rule = 2  ))
+  #data_interp <- as.data.frame(approx(plot$data$thresholds, plot$data$est, xout = data_treated[data_treated[[event_type]]==1,marker], rule = 2  ))
 
 
-  plot <- plot  + geom_point(data=data_interp,aes(x=x, y=y), colour = "blue")
+  #plot <- plot  + geom_point(data=data_interp,aes(x=x, y=y), colour = "blue")
 
   #+  geom_text(aes(x=max_thresh *(1.01), label="No observed events", y=0.002), colour="black", angle=90, text=element_text(size=11))
   append_end <- ""
   append_start <- "PLOT"
+  append <- ""
   folder <- ""
   if (monotone) {
     append_start <- paste0(append_start, "_monotone_")
@@ -135,11 +142,19 @@ get_plot <- function(marker, failure_time = "EventTimePrimary", event_type = "Ev
   }
 
 
+  print(here::here(
+    "figs", folder,
+    paste0(append_start,  COR, "_", marker, "_", variant, append_end, ".pdf")
+  ))
+
+  path <- here::here(
+    "figs", folder,
+    paste0(append_start,  COR, "_", marker, "_", variant, append_end, ".pdf")
+  )
+  print(path)
+  print(plot)
   ggsave(
-    filename = here::here(
-      "figs", folder,
-      paste0(append_start,  COR, "_", marker, append_end, ".pdf")
-    ),
+    filename = path,
     plot = plot, height = 7, width = 9
   )
 

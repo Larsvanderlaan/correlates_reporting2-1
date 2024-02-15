@@ -17,7 +17,8 @@ run_competing_risk_analysis = function(covariates,
                                        event_type,
                                        marker,
                                        variant_type,
-                                       variant_names
+                                       variant_names,
+                                       marker_for_thresholds
 ){
 
 
@@ -27,15 +28,16 @@ run_competing_risk_analysis = function(covariates,
   viral_load <- "seq1.log10vl"
   Perprotocol <- "Perprotocol"
   weights_twostage <- "wt"
-  TwophasesampIndD29 <- "ph2"
+  TwophasesampIndD29 <- "TwophasesampIndD29variant"
   # get the dataset
   #data <- setDT(fread(paste0("~/repositories/covidanalysis/data/janssen_", subset_region, "_partA_data_processed_with_riskscore_hotdeckv4.csv")))
   # subset ph1 and per protocol
   subset <- which(data[[Perprotocol]] == 1 & data[[ph1]] == 1)
   data <- data[subset]
+  data <- data[data$Region == 1]
 
 
-  data <- data[, c(weights_twostage, marker, event_type, failure_time, covariates, variant_type, Perprotocol, TwophasesampIndD29, Trt , viral_load), with = FALSE]
+  data <- data[, c(weights_twostage, marker, event_type, failure_time, covariates, variant_type, Perprotocol, TwophasesampIndD29, Trt , viral_load, marker_for_thresholds), with = FALSE]
   # make competing risk indicators
   variant_strata <- c("Ancestral.Lineage" = 181 ,
                       "Zeta" = 176,
@@ -79,27 +81,46 @@ run_competing_risk_analysis = function(covariates,
     subset <- which(data_treated[[TwophasesampIndD29]] == 1)
     data_treated <- data_treated[subset]  # assumes TwophasesampIndD29 used only for treatment arm
     # subset to reelvant variables
+    marker_values_for_thresh <- data_treated[[marker_for_thresholds]]
+
+    all_thresholds <- sort(as.vector(na.omit(marker_values_for_thresh[data_treated[[event_type]] != 0])))
     data_treated <- data_treated[, c(covariates, failure_time, event_type_target, marker, weights), with = FALSE]
     data_placebo <-  data_placebo[, c(covariates, failure_time, event_type_target), with = FALSE]
-    # assert_that(all(
-    #   data_treated$Trt == 1
-    #   & data_treated$Perprotocol == 1
-    #   & data_treated$TwophasesampIndD29 == 1
-    #   & !any(is.na(data_treated[[variant_type]]))
-    # ))
-    # assert_that(all(
-    #   data_placebo$Trt == 0
-    #   & data_placebo$Perprotocol == 1
-    #   & data_placebo$TwophasesampIndD29 == 1
-    #   & !any(is.na(data_placebo[[variant_type]]))
-    # ))
+
+
+
+    if(TRUE) {
+      print(quantile(all_thresholds))
+      nbins_threshold <- 20
+
+      # ensure there are at least 5 events above threshold.
+      drop_thresh <- min(unique(all_thresholds)[order(unique(all_thresholds), decreasing = TRUE)[1:5]])
+      #drop_thresh <- c(drop_thresh, quantile(data_treated[[marker]], 0.95, type =1))
+      all_thresholds <- all_thresholds[all_thresholds <= drop_thresh]
+
+
+      # add minimal threshold and make grid of thresholds
+      threshold_list <- min(marker_values_for_thresh, na.rm = TRUE)
+      threshold_list <- sort(unique(
+        c(
+          threshold_list,
+          quantile(setdiff(all_thresholds, threshold_list), seq(0, 1, length = nbins_threshold), type = 1)
+        )))
+
+      if(any(is.na(marker_values_for_thresh))) {
+        stop("NAs in marker for threshold CR")
+      }
+      marker_data <- marker_values_for_thresh
+      n_in_bin <- sapply(threshold_list, function(s) {
+        sum(marker_data >= s)
+      })
+
+      threshold_list <- threshold_list[n_in_bin >= 50]
+    }
 
 
 
 
-
-    #### Analysis for treated
-    ## get reference time for survival analysis
     output_treated <- run_survtmle3(tf = tf,
                                     data_surv = data_treated,
                                     covariates = covariates,
@@ -108,6 +129,7 @@ run_competing_risk_analysis = function(covariates,
                                     weights = weights,
                                     marker = marker,
                                     nbins_time = 20,
+                                    threshold_list = threshold_list,
                                     nbins_threshold = 20)
 
     # make survival dataset
@@ -115,7 +137,14 @@ run_competing_risk_analysis = function(covariates,
     output_treated$estimates <- unlist( output_treated$estimates )
     output_treated$se <- unlist( output_treated$se )
     output_treated$times <- tf
-    output_treated$estimates_monotone <- -as.stepfun(isoreg(output_treated$threshold, -output_treated$estimates))(output_treated$threshold)
+    weights_for_iso <- sqrt(n_in_bin)
+    weights_for_iso <- weights_for_iso / sum(weights_for_iso)
+
+    output_treated$estimates_monotone <- -isotone::gpava(output_treated$threshold, -output_treated$estimates, weights = weights_for_iso)$x
+
+    #output_treated$estimates_monotone <- -as.stepfun(isoreg(output_treated$threshold, -output_treated$estimates))(output_treated$threshold)
+
+
 
 
     # run placebo analysis
@@ -134,9 +163,9 @@ run_competing_risk_analysis = function(covariates,
     output_treated$estimates_log_RR <-  log(output_treated$estimates) - log(est)
     output_treated$se_log_RR <- sqrt((output_treated$se/output_treated$estimates)^2 + (se/est)^2)
 
-    fwrite(output_treated, here::here(paste0("output/vaccine_", marker, "_", failure_time, "_", event_type_target, ".csv")))
-    fwrite(data_treated, here::here(paste0("data_clean/data_treated_", marker, "_", failure_time, "_", event_type_target, ".csv")))
-    fwrite(data_placebo, here::here(paste0("data_clean/data_placebo_", marker, "_", failure_time, "_", event_type_target, ".csv")))
+    saveRDS(output_treated, file = here::here(paste0("output/vaccine_", marker, "_", failure_time, "_", event_type_target, ".RDS")))
+    fwrite(data_treated,  here::here(paste0("data_clean/data_treated_", marker, "_", failure_time, "_", event_type_target, ".csv")))
+    fwrite(data_placebo,   here::here(paste0("data_clean/data_placebo_", marker, "_", failure_time, "_", event_type_target, ".csv")))
   }
 }
 
@@ -145,11 +174,13 @@ run_competing_risk_analysis = function(covariates,
 
 
 
-run_survtmle3 <- function(tf, data_survival, covariates, failure_time, event_type, weights , marker = NULL, nbins_time = 20, nbins_threshold = 20) {
+run_survtmle3 <- function(tf, data_survival, covariates, failure_time, event_type, weights , marker = NULL, nbins_time = 20, threshold_list = NULL, nbins_threshold = 20) {
   tf <- as.numeric(tf)
   data_survival <- as.data.table(data_survival)
   # effectivelly removed observations with no weights
-  data_survival <- na.omit(data_survival[, c(covariates, failure_time, event_type, marker, weights), with = FALSE ])
+  data_survival <- (data_survival[, c(covariates, failure_time, event_type, marker, weights), with = FALSE ])
+
+
   # discretize
   time_grid <- unique(quantile(data_survival[[failure_time]], seq(0,1, length = nbins_time+1), type = 1))
   # add time of interest to grid
@@ -180,18 +211,33 @@ run_survtmle3 <- function(tf, data_survival, covariates, failure_time, event_typ
   # learner.treatment <- stack.failure <- stack.censoring <- learner.event_type <- Lrnr_cv$new(Lrnr_glm$new())
 
   # get thresholds corresponding to events
-  all_thresholds <- sort(as.vector(na.omit(data[[marker]][data_survival[[event_type]] != 0])))
-  # ensure there are at least 5 events above threshold.
-  drop_thresh <- unique(all_thresholds)[order(unique(all_thresholds), decreasing = TRUE)[1:5]]
-  all_thresholds <- setdiff(all_thresholds, drop_thresh)
+  if(is.null(threshold_list)) {
+    all_thresholds <- sort(as.vector(na.omit(data_survival[[marker]][data_survival[[event_type]] != 0])))
+    # ensure there are at least 5 events above threshold.
+    drop_thresh <- min(unique(all_thresholds)[order(unique(all_thresholds), decreasing = TRUE)[1:10]])
+    #drop_thresh <- min(drop_thresh, quantile( all_thresholds, 0.95, type = 1))
+    all_thresholds <- all_thresholds[all_thresholds <= drop_thresh]
 
-  # add minimal threshold and make grid of thresholds
-  threshold_list <- min(data[[marker]], na.rm = TRUE)
-  threshold_list <- sort(unique(
-    c(
-      threshold_list,
-      quantile(setdiff(all_thresholds, threshold_list), seq(0, 1, length = nbins_threshold), type = 1)
-    )))
+
+    # add minimal threshold and make grid of thresholds
+    threshold_list <- min(data_survival[[marker]], na.rm = TRUE)
+    threshold_list <- sort(unique(
+      c(
+        threshold_list,
+        quantile(setdiff(all_thresholds, threshold_list), seq(0, 1, length = nbins_threshold), type = 1)
+      )))
+
+    if(any(is.na(data_survival[[marker]]))) {
+      stop("NAs in marker for threshold CR")
+    }
+    marker_data <- data_survival[[marker]]
+    n_in_bin <- sapply(threshold_list, function(s) {
+      sum(marker_data >= s)
+    })
+    print(n_in_bin)
+    threshold_list <- threshold_list[n_in_bin >= 60]
+  }
+  #max_cutoff <- quantile(data[[marker]], 0.975, na.rm = TRUE)
 
 
 
@@ -199,10 +245,11 @@ run_survtmle3 <- function(tf, data_survival, covariates, failure_time, event_typ
   out_list <- list()
   for(threshold in threshold_list  ) {
     print(paste0("THRESHOLD: ", threshold))
-    try({
+    #try({
       data_survival[[treatment]] <- 1*(data_survival[[marker]] >= threshold)
 
       #print(mean(1*(data_survival[[marker]] >= threshold)))
+
       survout <- survtmle3_discrete(data_survival[[failure_time]], data_survival[[event_type]],
                                     data_survival[[treatment]], data_survival[, covariates, with = FALSE],
                                     weights = data_survival[[weights]],
@@ -218,11 +265,13 @@ run_survtmle3 <- function(tf, data_survival, covariates, failure_time, event_typ
                                     cross_fit = FALSE,
                                     cross_validate = FALSE,
                                     calibrate = FALSE,
-                                    verbose = TRUE, max_iter = 100)
+                                    verbose = TRUE, max_iter = 100,
+                                    tol = 1e-5
+      )
 
       survout$threshold <- threshold
       out_list[[paste0(threshold)]] <- survout
-    })
+   # })
   }
 
 
