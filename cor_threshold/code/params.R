@@ -10,7 +10,16 @@ TRIAL <- Sys.getenv("TRIAL")
 
 library(data.table)
 library(sl3)
-library(npsurvival)
+library(hal9001)
+library(R6)
+#library(npsurvival)
+source("code/survthresh/survtmle3_discrete.R")
+source("code/survthresh/helpers_delta_method.R")
+source("code/survthresh/discrete_debias_failure_hazard.R")
+source("code/survthresh/discrete_debias_ftype_distr.R")
+source("code/survthresh/helpers_survival_data.R")
+source("code/survthresh/Lrnr_independent_binomial.R")
+source("code/survthresh/Lrnr_cv.R")
 ### #####
 #### NOTE Currently only supports Day29 and Day57 markers
 #########

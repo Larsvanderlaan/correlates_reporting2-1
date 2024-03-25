@@ -20,10 +20,6 @@
   event_type.distr.hat_a0_j0 <- as.vector(event_type.distr.hats[[as.character(target_treatment)]][, match(target_event_type, event_type_levels)])
 
 
-   event_type.distr.hat_a0_j0 <- pmax(1e-8, event_type.distr.hat_a0_j0)
-  event_type.distr.hat_a0_j0 <- pmin(1-1e-8, event_type.distr.hat_a0_j0)
-
-
   # clever covariate
   treatment.a0.hat <- pmax(treatment.a0.hat, 1e-8)
   H1.hat <- (treatment_ind/treatment.a0.hat) * (censor_ind/S_censor_a0)
@@ -32,19 +28,13 @@
   # tmle update
 
 
-  if(any(weights*dN*H1.hat != 0)) {
-    eps.hat <- coef(glm.fit(rep(1,length(ind_j0)), ind_j0 ,family = binomial(), weights = weights*dN*H1.hat, offset = qlogis(event_type.distr.hat_a0_j0)))
-  } else {
-    eps.hat <- 0
-  }
-
+  event_type.distr.hat_a0_j0 <- pmin(pmax(event_type.distr.hat_a0_j0, 1e-8), 1 - 1e-8)
+  eps.hat <- coef(glm.fit(rep(1,length(ind_j0)), ind_j0 ,family = binomial(), weights = weights*dN*H1.hat, offset = qlogis(event_type.distr.hat_a0_j0)))
   event_type.distr.hat_a0_j0 <- plogis(qlogis(event_type.distr.hat_a0_j0) + eps.hat)
 
   score <- mean(weights * dN*H1.hat* (ind_j0 - event_type.distr.hat_a0_j0))
-
-
   if(abs(score) > 1e-5) {
-    print("TMLE score for event_type distribution is solved at low level. There may be convergence issues")
+    print("TMLE score for event_typeer distribution is solved at low level. There may be convergence issues")
     print(mean(weights * dN*H1.hat* (ind_j0 - event_type.distr.hat_a0_j0)))
   }
 

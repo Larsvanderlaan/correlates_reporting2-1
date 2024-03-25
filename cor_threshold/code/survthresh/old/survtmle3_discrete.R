@@ -91,7 +91,7 @@ survtmle3_discrete <- function(failure_time, event_type, treatment, covariates,
                                autoML = FALSE,
                                nfolds = 10,
                                max_iter = 200,
-                               tol = 0.1/sqrt(sum(weights))/log(length(treatment)),
+                               tol = 0.1/sqrt(length(treatment))/log(length(treatment)),
                                verbose = TRUE
 ) {
     treatment <- as.numeric(as.vector(treatment))
@@ -215,15 +215,20 @@ survtmle3_discrete <- function(failure_time, event_type, treatment, covariates,
     tmp <- data_long
     tmp$treatment <- level
     pooled_hazard_task <- suppressWarnings(sl3_Task$new(tmp, covariates = c(covariate_names, "treatment", "t"), outcome = "dN", weights = "weights", id = "id", folds = pooled_folds, time = "t"))
-    #print("Here")
-    #total.hazard.hat <-  learner.failure_trained$predict(pooled_hazard_task)
-    #print("Here1")
     total.hazard.hat <-  learner.failure_trained$predict_fold(pooled_hazard_task, fold_type)
-
     return(total.hazard.hat)
   }))
   colnames(total.hazard.hats) <- as.character(treatment_levels)
   # store in list indexed by status
+
+  hz <- colMeans(matrix(total.hazard.hats, ncol = length(time_grid)))
+  tsk <- pooled_hazard_task[in_risk_set]
+  #print(mean(tsk$Y))
+  #print(weighted.mean(tsk$Y, tsk$weights))
+  #print(hz)
+  #print(cumprod(1-hz))
+
+ c
 
   ######
   # estimate censoring hazard
@@ -276,21 +281,16 @@ survtmle3_discrete <- function(failure_time, event_type, treatment, covariates,
         tmp$treatment <- level
         tmp$failure_time <- t
         task_event_type_predict <- suppressWarnings(sl3_Task$new(tmp, covariates = c(covariate_names, "treatment", "failure_time"), outcome = "event_type", outcome_type = outcome_type, weights = "weights", id = "id", folds = folds))
-
         event_type.distr.hats <- learner.event_type_trained$predict_fold(task_event_type_predict, fold_type)
-        #print(head(data.table(event_type.distr.hats)))
         return(event_type.distr.hats)
       }))
-      #print("here")
-      #print(head(data.table(event_type.distr.hats)))
       # predictions are packed
-      event_type.distr.hats <-  do.call(cbind, lapply(seq_along(event_type_levels), function(j) {
+      event_type.distr.hats <- do.call(cbind, lapply(seq_along(event_type_levels), function(j) {
         # extract the jth index of each row
         as.vector(unlist(apply(event_type.distr.hats, 1, FUN = function(row){
           as.vector(unlist(row, use.names = FALSE)[[j]])
         })))
       }))
-
       colnames(event_type.distr.hats) <- as.character(event_type_levels)
       return(event_type.distr.hats)
     })
@@ -305,8 +305,6 @@ survtmle3_discrete <- function(failure_time, event_type, treatment, covariates,
 
 
 
-
-
   # create list of nuisance estimates and parameters for tmle
 
 
@@ -316,16 +314,39 @@ survtmle3_discrete <- function(failure_time, event_type, treatment, covariates,
   ##################################################
 
   # calibrate or adaptively truncate propensity scores away from zero
-
-
-
-  treatment.hat <- apply(treatment.hat, 2, pmax, 0.005)
-  treatment.hat <- apply(treatment.hat, 2, pmin, 1 - 0.005)
+  if(calibrate) {
+    truncation_method <- ifelse(length(unique(data_long$id)) >= 1000, "adaptive", "adaptive")
+    } else {
+      truncation_method <- "adaptive"
+    }
+  treatment.hat <- do.call(cbind, lapply(seq_along(treatment_levels), function(index){
+    treatment.a0.hat <- causalutils::truncate_propensity(treatment.hat[,index], data$treatment, treatment_level = treatment_levels[index], truncation_method = truncation_method)
+    return(treatment.a0.hat)
+  }))
   colnames(treatment.hat) <- as.character(treatment_levels)
 
+ a0 <- j0 <- 1
+  S_failure_left <- long_hazard_to_survival_mats(total.hazard.hats, time_grid = time_grid, left_cont = TRUE)
+  names(S_failure_left) <- as.character(treatment_levels)
+  S_failure_left_a0 <- as.vector(S_failure_left[[as.character(a0)]])
 
-  max_eps <- 0.1
-  tmle.spec <- list(max_eps = max_eps,  tol = tol, data_long = data_long, treatment_levels = treatment_levels, event_type_levels= event_type_levels, treatment.hat = treatment.hat, censor.hazard.hats = censor.hazard.hats, total.hazard.hats = total.hazard.hats,  event_type.distr.hats = event_type.distr.hats, weights = weights)
+  event_type.distr.hat_a0_j0 <- as.vector(event_type.distr.hats[[as.character(a0)]][, match(j0, event_type_levels)])
+  total.hazard.hats_a0 <- total.hazard.hats[, match(a0, treatment_levels)]
+
+  F_failure_a0_j0 <- S_failure_left_a0 * total.hazard.hats_a0 * event_type.distr.hat_a0_j0
+  F_failure_a0_j0 <- matrix(F_failure_a0_j0, ncol = length(time_grid))
+
+  F_failure_a0_j0 <- t(apply(F_failure_a0_j0, 1, cumsum))
+  F_failure_a0_j0_t0 <- F_failure_a0_j0[, match(target_failure_time, time_grid), drop = FALSE]
+
+  ests <- apply(as.matrix(F_failure_a0_j0_t0), 2, weighted.mean, weights)
+  print(paste0("ests: ", ests))
+
+
+  #t0=target_failure_time; a0=target_treatment; j0=target_event_type
+
+
+  tmle.spec <- list(max_eps = 0.05,   data_long = data_long, treatment_levels = treatment_levels, event_type_levels= event_type_levels, treatment.hat = treatment.hat, censor.hazard.hats = censor.hazard.hats, total.hazard.hats = total.hazard.hats,  event_type.distr.hats = event_type.distr.hats, weights = weights)
   output <- as.data.table(expand.grid(target_treatment, target_event_type))
   names(output) <- c("treatment", "event_type")
   output$times <- list()
@@ -352,8 +373,6 @@ survtmle3_discrete <- function(failure_time, event_type, treatment, covariates,
         out_hazard <- suppressWarnings(sl3:::call_with_args(.target_failure_hazard, tmle.spec, silent = TRUE))
         tmle.spec$total.hazard.hats <- out_hazard$total.hazard.hats
         score_hazard <- out_hazard$score
-        print(paste0("HAZARD SCORE: ", abs(score_hazard)))
-        print(paste0("TOL: ", abs(tol)))
         if(abs(score_hazard) <= tol) {
           print(paste0("failiure score solved: ", score_hazard))
          # print(iter)
@@ -379,32 +398,17 @@ survtmle3_discrete <- function(failure_time, event_type, treatment, covariates,
       F_failure_a0_j0_t0 <- F_failure_a0_j0[, match(target_failure_time, time_grid), drop = FALSE]
 
       ests <- apply(as.matrix(F_failure_a0_j0_t0), 2, weighted.mean, weights)
-
-      # Compute covariate component of EIF
       EIF_W <- do.call(cbind,lapply(1:length(target_failure_time), function(index){
         comp <- F_failure_a0_j0_t0[, index] - ests[index]
-        #rep(weights*comp, length(time_grid))
-        return(weights*comp)
+        rep(weights*comp, length(time_grid))
       }))
-      # Hazard component of EIF
-      EIF_hazard <- apply(out_hazard$EIF, 2, function(eif){
+      EIF <- out_hazard$EIF + as.vector(out_event_type$EIF) + EIF_W
+      # sum over time points
+      EIF <- apply(EIF, 2, function(eif){
         rowSums(matrix(eif, ncol = length(time_grid) , byrow = FALSE))
       })
-      # Event type component of EIF
-      EIF_event_type <- apply(as.matrix(out_event_type$EIF), 2, function(eif){
-        rowSums(matrix(eif, ncol = length(time_grid) , byrow = FALSE))
-      })
-
-
-      EIF <- EIF_hazard + EIF_event_type + EIF_W
       row_index <- output$event_type==j0 & output$treatment==a0
-
-      print(c(sd(EIF_hazard), sd(as.vector(EIF_event_type)), sd( EIF_W)))
-
-
       ses <- apply(EIF, 2, sd)/sqrt(sum(weights))
-      #print(ses)
-      #stop("hi")
       names(ests) <- paste0("time_", target_failure_time)
       names(ses) <- paste0("time_", target_failure_time)
 
@@ -422,7 +426,7 @@ survtmle3_discrete <- function(failure_time, event_type, treatment, covariates,
 
 
 
-  tmle.spec <- list(max_eps = max_eps,   data_long = data_long, treatment_levels = treatment_levels, event_type_levels= event_type_levels, treatment.hat = treatment.hat, censor.hazard.hats = censor.hazard.hats, total.hazard.hats = total.hazard.hats,  event_type.distr.hats = event_type.distr.hats, weights = weights)
+  tmle.spec <- list(max_eps = 10,   data_long = data_long, treatment_levels = treatment_levels, event_type_levels= event_type_levels, treatment.hat = treatment.hat, censor.hazard.hats = censor.hazard.hats, total.hazard.hats = total.hazard.hats,  event_type.distr.hats = event_type.distr.hats, weights = weights)
 
 
 

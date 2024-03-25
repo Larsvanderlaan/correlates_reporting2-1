@@ -18,7 +18,7 @@ plot_threshold_response <- function(results, simultaneous_CI = FALSE, monotone =
   CI_left <- estimates - qnorm(0.975) * standard_errors
   CI_right <- estimates + qnorm(0.975) * standard_errors
   CI_left <- pmax(CI_left, 0)
-  CI_right <- pmin(CI_right, 0.015)
+  CI_right <- pmin(CI_right, 0.02)
   estimates <- pmin(estimates, 0.02)
   plot_data <- data.table(thresholds = thresholds, est= estimates, se= standard_errors,
                           lower = CI_left, upper = CI_right)

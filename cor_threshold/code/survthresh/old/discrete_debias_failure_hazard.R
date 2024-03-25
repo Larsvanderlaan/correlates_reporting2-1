@@ -1,6 +1,6 @@
 
 #' internal use
-.target_failure_hazard <- function(max_eps = 0.05, target_failure_time, target_treatment, target_event_type, data_long, treatment_levels, event_type_levels, treatment.hat, censor.hazard.hats, total.hazard.hats, event_type.distr.hats, weights, tol) {
+.target_failure_hazard <- function(max_eps = 0.05, target_failure_time, target_treatment, target_event_type, data_long, treatment_levels, event_type_levels, treatment.hat, censor.hazard.hats, total.hazard.hats, event_type.distr.hats, weights) {
   if(any(is.na(unlist(treatment.hat)))){
     stop("NA values found in propensity score.")
   }
@@ -70,8 +70,8 @@
 
 
   print(paste0("est step", weighted.mean(F_failure_a0_j0_t0, weights)))
-  #print(quantile(event_type.distr.hat_a0_j0))
-  #stop("Wait")
+
+
 
   # indicator of not being censored prior to time t
   censor_ind <- data_long$in_risk_set
@@ -81,12 +81,7 @@
   S_censor_a0 <- pmax(S_censor_a0, 25/sqrt(n)/log(n))
   # make clever covariates
   treatment.a0.hat <- pmax(treatment.a0.hat, 1e-6)
-
   H1.hat <- as.matrix((treatment_ind/treatment.a0.hat) * (censor_ind/S_censor_a0))
-
-
-
-
   if(any(is.na(unlist(H1.hat)))) {
     print(data.table(H1.hat))
     stop("NA values found in clever weights H1.hat.")
@@ -99,8 +94,6 @@
     zero_out <- 1*(data_long$t <= t0)
     return(zero_out *H3.hat[,index])
   }))
-
-
   if(any(is.na(unlist(H3.hat)))) {
     print(paste0("target times: ", target_failure_time))
     print(data.table(S_failure_a0, F_failure_a0_j0, F_failure_a0_j0_t0, event_type.distr.hat_a0_j0, H3.hat))
@@ -115,15 +108,21 @@
 
 
   IF <- as.matrix(in_risk_set * as.vector(H1.hat) * weights * H3.hat * as.vector(dN - total.hazard.hats_a0))
-  IF_long <- IF
+
+  #EIF <- apply(IF, 2, function(eif){
+  #  rowSums(matrix(eif, ncol = length(time_grid) , byrow = FALSE))
+  #})
+
+
   # sum over time
   if(any(is.na(unlist(IF)))) {
+
     stop("NA values found in influence function.")
   }
+
   IF <- as.matrix(apply(IF, 2, function(v){rowSums(matrix(v, ncol = length(time_grid)))}))
   scores <- apply(IF, 2, mean)
-  print("SCORES")
-  print(scores)
+
   direction <- scores/sqrt(mean(scores^2))
 
   if(any(is.na(direction))) {
@@ -145,30 +144,21 @@
     # weighted log-likelihood loss
     #mean(in_risk_set * H1.hat * weights * ifelse(dN == 1, -log(haz_eps), -log(1-haz_eps)))
   }
-  scale <- 1 #sqrt(weighted.mean(H3.hat%*%direction^2,   in_risk_set  * H1.hat  * weights ))
-
-  wts <- in_risk_set  * H1.hat  * weights
-
+  scale <- sqrt(mean(H3.hat^2))
 
 
   #### Add up to t0
   max_eps <- max_eps/scale
-
-
-  # only update if tolerance not reached.
-  if(sqrt(mean(scores^2)) > tol) {
-    eps.hat <- optim(0, risk_function, method = "Brent", lower = -max_eps, upper = max_eps)$par
-  } else {
-    eps.hat <- 0
-  }
-
+  eps.hat <- optim(0, risk_function, method = "Brent", lower = -max_eps, upper = max_eps)$par
   total.hazard.hats_a0 <- plogis(qlogis(total.hazard.hats_a0) + eps.hat * as.vector(H3.hat%*%direction))
-  total.hazard.hats[, match(target_treatment, treatment_levels)] <- total.hazard.hats_a0
 
   if(any(is.na(unlist(total.hazard.hats_a0)))) {
     stop("NAs found in targeted/fluctuated hazard.")
   }
 
+  EIF <- as.matrix(in_risk_set * as.vector(H1.hat) * weights * H3.hat * as.vector(dN - total.hazard.hats_a0))
 
-  return(list(total.hazard.hats = total.hazard.hats, score = sqrt(mean(scores^2)), EIF = IF_long))
+  total.hazard.hats[, match(target_treatment, treatment_levels)] <- total.hazard.hats_a0
+
+  return(list(total.hazard.hats = total.hazard.hats, score = sqrt(mean(scores^2)), EIF = EIF))
 }
