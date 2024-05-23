@@ -127,13 +127,11 @@
   direction <- scores/sqrt(mean(scores^2))
 
   if(any(is.na(direction))) {
-    print("Weighted mean etimate")
-    try({print(weighted.mean(as.vector(F_failure_a0_j0), weights))})
-    print(quantile(H3.hat))
-    print(quantile(H1.hat))
-    print(quantile(in_risk_set))
-    print(quantile(as.vector(dN - total.hazard.hats_a0)))
-    warning("Direction of least favorable submodel has NA values. Setting equal to zero.")
+    print(data.table(IF))
+    print(data.table(H1.hat))
+    print(data.table(H3.hat))
+    print(data.table(weights))
+    stop("Direction of least favorable submodel has NA values. Setting equal to zero.")
     direction[is.na(direction)] <- 0
   }
 

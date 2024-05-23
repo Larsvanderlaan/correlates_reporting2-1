@@ -268,7 +268,6 @@ survtmle3_discrete <- function(failure_time, event_type, treatment, covariates,
 
     #learner.event_type.categorical <- Lrnr_independent_binomial$new(binomial_learner = learner.event_type)
     learner.event_type_trained <- learner.event_type$train(task_event_type_train)
-    print(learner.event_type_trained$fit_object$formula)
     # matrix of event_type-specific estimates with columns following order of event_type_levels
     # at each time, get the probabilities.
     event_type.distr.hats <- lapply(treatment_levels, function(level) {
@@ -327,36 +326,6 @@ survtmle3_discrete <- function(failure_time, event_type, treatment, covariates,
 
   max_eps <- 0.1
   tmle.spec <- list(max_eps = max_eps,  tol = tol, data_long = data_long, treatment_levels = treatment_levels, event_type_levels= event_type_levels, treatment.hat = treatment.hat, censor.hazard.hats = censor.hazard.hats, total.hazard.hats = total.hazard.hats,  event_type.distr.hats = event_type.distr.hats, weights = weights)
-
-
-  #### initial
-
-
-  get_estimates <- function(tmle.spec, a0, j0, target_failure_time) {
-    total.hazard.hats <- tmle.spec$total.hazard.hats
-    event_type.distr.hat_a0_j0 <- tmle.spec$event_type.distr.hat_a0_j0
-
-    S_failure_left <- long_hazard_to_survival_mats(total.hazard.hats, time_grid = time_grid, left_cont = TRUE)
-    names(S_failure_left) <- as.character(treatment_levels)
-    S_failure_left_a0 <- as.vector(S_failure_left[[as.character(a0)]])
-
-    event_type.distr.hat_a0_j0 <- as.vector(event_type.distr.hats[[as.character(a0)]][, match(j0, event_type_levels)])
-    total.hazard.hats_a0 <- total.hazard.hats[, match(a0, treatment_levels)]
-
-    F_failure_a0_j0 <- S_failure_left_a0 * total.hazard.hats_a0 * event_type.distr.hat_a0_j0
-    F_failure_a0_j0 <- matrix(F_failure_a0_j0, ncol = length(time_grid))
-
-    F_failure_a0_j0 <- t(apply(F_failure_a0_j0, 1, cumsum))
-    F_failure_a0_j0_t0 <- F_failure_a0_j0[, match(target_failure_time, time_grid), drop = FALSE]
-
-    ests <- apply(as.matrix(F_failure_a0_j0_t0), 2, weighted.mean, weights)
-    return(ests)
-  }
-
-
-  ####
-
-
   output <- as.data.table(expand.grid(target_treatment, target_event_type))
   names(output) <- c("treatment", "event_type")
   output$times <- list()
@@ -368,10 +337,6 @@ survtmle3_discrete <- function(failure_time, event_type, treatment, covariates,
       tmle.spec$target_event_type <- j0
       tmle.spec$target_failure_time <- target_failure_time
       tmle.spec$target_treatment <- a0
-      print("ESTIMATE")
-      print(get_estimates(tmle.spec, a0, j0, target_failure_time))
-
-
       # target distribution of event_type
       if(length(event_types) > 1) {
         out_event_type <- suppressWarnings(sl3:::call_with_args(.target_event_type_distr, tmle.spec, silent = TRUE))
@@ -381,16 +346,11 @@ survtmle3_discrete <- function(failure_time, event_type, treatment, covariates,
       } else {
         out_event_type <- list(EIF = 0)
       }
-      print("ESTIMATE after strain targeting")
-      print(get_estimates(tmle.spec, a0, j0, target_failure_time))
       # target the failure hazard estimator
       converged_flag <- FALSE
       for(iter in 1:max_iter) {
-        print(iter)
         out_hazard <- suppressWarnings(sl3:::call_with_args(.target_failure_hazard, tmle.spec, silent = TRUE))
         tmle.spec$total.hazard.hats <- out_hazard$total.hazard.hats
-        print("ESTIMATE after hazard targeting once")
-        print(get_estimates(tmle.spec, a0, j0, target_failure_time))
         score_hazard <- out_hazard$score
         print(paste0("HAZARD SCORE: ", abs(score_hazard)))
         print(paste0("TOL: ", abs(tol)))
@@ -439,7 +399,7 @@ survtmle3_discrete <- function(failure_time, event_type, treatment, covariates,
       EIF <- EIF_hazard + EIF_event_type + EIF_W
       row_index <- output$event_type==j0 & output$treatment==a0
 
-      #print(c(sd(EIF_hazard), sd(as.vector(EIF_event_type)), sd( EIF_W)))
+      print(c(sd(EIF_hazard), sd(as.vector(EIF_event_type)), sd( EIF_W)))
 
 
       ses <- apply(EIF, 2, sd)/sqrt(sum(weights))

@@ -8,14 +8,6 @@ renv::activate(project = here::here(".."))
 source(here::here("code", "params.R"))
 
 
-# specify learners
-learner.treatment <-  Lrnr_glm$new() #Lrnr_glm$new()
-learner.event_type <- Lrnr_hal9001$new(max_degree = 2, num_knots = 40, family = "binomial", smoothness_orders =0,
-                                       #lambda = 0, fit_control = list(cv_select = FALSE),
-                                       formula = ~   h(risk_score, k = 10) +   h(treatment, pf = 0) + h(failure_time, pf = 0) + h(treatment,failure_time, pf = 0))
-stack.failure <-  Lrnr_hal9001$new(max_degree = 2, num_knots = 35, smoothness_orders =0, formula = ~  h(risk_score, k = 10) + h(treatment, pf = 0) + h(t, pf = 0) + h(treatment,t, pf = 0))
-stack.censoring <- stack.failure
-
 
 
 
@@ -31,8 +23,7 @@ run_competing_risk_analysis = function(data,
                                        Trt,
                                        TwophasesampIndD29,
                                        viral_load,
-                                       threshold_list,
-                                       nbins_time = 35
+                                       threshold_list
 ){
 
 
@@ -72,6 +63,7 @@ run_competing_risk_analysis = function(data,
     subset <- which(data_treated[[TwophasesampIndD29]] == 1);  data_treated <- data_treated[subset]
     # subset to relevant variables
     data_treated <- data_treated[, c(covariates, failure_time, event_type_target, marker, weights), with = FALSE]
+
     data_placebo <-  data_placebo[, c(covariates, failure_time, event_type_target), with = FALSE]
     tmp_marker <- ifelse(data_treated[[weights]] == 0, 0, data_treated[[marker]])
     set(data_treated, , marker, tmp_marker)
@@ -82,48 +74,9 @@ run_competing_risk_analysis = function(data,
       stop("NAs in marker for threshold CR")
     }
 
-    # run placebo analysis
-    data_placebo <- as.data.table(na.omit(data_placebo))
-    fit <- cmprsk::cuminc(data_placebo[[failure_time]], data_placebo[[event_type_target]])
-    fit <- cmprsk::timepoints(fit, as.numeric(tf))
-    # get estimate and se for reference time
-    est_placebo <- fit$est[1,1]
-    se_placebo <- sqrt(fit$var[1,1])
 
-    # USe discretized time for better comparison.
-
-    tf <- as.numeric(tf)
-    data_placebo_discrete <- as.data.table(data_placebo)
-    time_grid <- unique(quantile(data_treated[[failure_time]], seq(0,1, length = nbins_time+1), type = 1))
-    time_grid <- sort(union(time_grid, tf))
-    failure_time_discrete <- findInterval(data_placebo_discrete[[failure_time]], time_grid, all.inside = TRUE)
-    tf_discrete <- findInterval(tf, time_grid, all.inside = FALSE)
-    data_placebo_discrete[[failure_time]] <-failure_time_discrete
-    fit_discrete <- cmprsk::cuminc(data_placebo_discrete[[failure_time]], data_placebo_discrete[[event_type_target]])
-    fit_discrete <- cmprsk::timepoints(fit_discrete, as.numeric(tf_discrete))
-    #print(c(fit_discrete$est[1,1], est_placebo))
-    est_placebo <- fit_discrete$est[1,1]
-    se_placebo <- sqrt(fit_discrete$var[1,1])
-
-    output_control = run_survtmle3_control(tf = tf,
-                          data_surv = data_treated,
-                          covariates = covariates,
-                          failure_time = failure_time,
-                          event_type = event_type_target,
-                          weights = weights,
-                          marker = marker,
-                          nbins_time = nbins_time,
-                          threshold_list = threshold_list)
-    print(c(fit_discrete$est[1,1], est_placebo, unlist(output_control$est)))
-    est_placebo <- unlist(output_control$est)
-    se_placebo <- unlist(output_control$se)
-
-
-
-
-
-
-
+    print(quantile(data_treated[[marker]]))
+    print(threshold_list)
 
     output_treated <- run_survtmle3(tf = tf,
                                     data_surv = data_treated,
@@ -132,7 +85,7 @@ run_competing_risk_analysis = function(data,
                                     event_type = event_type_target,
                                     weights = weights,
                                     marker = marker,
-                                    nbins_time = nbins_time,
+                                    nbins_time = 20,
                                     threshold_list = threshold_list)
 
     # make survival dataset
@@ -144,8 +97,8 @@ run_competing_risk_analysis = function(data,
 
 
     n_in_bin <- sapply(threshold_list, function(thresh) {
-      sum( data_treated[[marker]] >= thresh)
-    })
+        sum( data_treated[[marker]] >= thresh)
+      })
 
     n_events_in_bin <- sapply(threshold_list, function(thresh) {
       sum(data_treated[data_treated[[marker]] >= thresh , event_type_target, with = FALSE] == 1)
@@ -169,14 +122,19 @@ run_competing_risk_analysis = function(data,
 
 
 
+    # run placebo analysis
+    data_placebo <- as.data.table(na.omit(data_placebo))
+    #form <- as.formula(paste0("Surv(", failure_time,  ", as.factor(", event_type_target, ")", ") ~ 1"))
+    fit <- cmprsk::cuminc(data_placebo[[failure_time]], data_placebo[[event_type_target]])
+    fit <- cmprsk::timepoints(fit, as.numeric(tf))
 
-
-
-
+    # get estimate and se for reference time
+    est <- fit$est[1,1]
+    se <- sqrt(fit$var[1,1])
 
     # delta method log(est) ~ sd(IF)/est
-    output_treated$estimates_placebo <- est_placebo
-    output_treated$se_placebo <- se_placebo
+    output_treated$estimates_placebo <- est
+    output_treated$se_placebo <- se
     output_treated$estimates_log_RR <-  log(output_treated$estimates) - log(est)
     output_treated$se_log_RR <- sqrt((output_treated$se/output_treated$estimates)^2 + (se/est)^2)
 
@@ -191,12 +149,13 @@ run_competing_risk_analysis = function(data,
 
 
 
-run_survtmle3 <- function(tf, data_survival, covariates, failure_time, event_type, weights , marker = NULL, nbins_time = 30, threshold_list) {
-
-  tf <- as.numeric(tf)
-
+run_survtmle3 <- function(tf, data_survival, covariates, failure_time, event_type, weights , marker = NULL, nbins_time = 20, threshold_list) {
+  print("HERE")
+  print(tf)
+   tf <- as.numeric(tf)
+   print(data_survival)
   data_survival <- as.data.table(data_survival)
-
+  print("HERE1")
   # effectivelly removed observations with no weights
   data_survival <- (data_survival[, c(covariates, failure_time, event_type, marker, weights), with = FALSE ])
 
@@ -210,6 +169,24 @@ run_survtmle3 <- function(tf, data_survival, covariates, failure_time, event_typ
   data_survival[[failure_time]] <-failure_time_discrete
 
 
+  print("HERE2")
+
+  lrnr <- Lrnr_cv$new(Stack$new(Lrnr_glm$new(), Lrnr_mean$new()))
+  #lrnr <- make_learner(Pipeline, Lrnr_cv$new(lrnr, full_fit = TRUE), Lrnr_cv_selector$new(loss_squared_error))
+
+
+  stack.failure <- stack.censoring <-  Lrnr_hal9001$new(max_degree = 1, num_knots = 20, smoothness_orders = 0)
+  learner.event_type <- Lrnr_mean$new()
+  learner.treatment <-  Lrnr_glm$new() #Stack$new(Lrnr_glm$new(),  Lrnr_gam$new(), Lrnr_mean$new())
+  #learner.treatment <-  make_learner(Pipeline, Lrnr_cv$new(learner.treatment, full_fit = TRUE), Lrnr_cv_selector$new(loss_squared_error))
+  treatment <- "treatment"
+
+ learner.treatment <-  Lrnr_glm$new()
+ learner.event_type <- Lrnr_glmnet$new()
+ stack.censoring <-   stack.failure <-  Lrnr_hal9001$new(max_degree = 1, num_knots = 15, smoothness_orders = 0)
+
+
+ print("HERE3")
 
   treatment <- "treatment"
   out_list <- list()
@@ -242,13 +219,13 @@ run_survtmle3 <- function(tf, data_survival, covariates, failure_time, event_typ
                                     cross_validate = FALSE,
                                     calibrate = FALSE,
                                     verbose = TRUE, max_iter = 100,
-                                    tol = 1e-7
+                                    tol = 1e-3
       )
     })
 
-    survout$threshold <- threshold
-    out_list[[paste0(threshold)]] <- survout
-    # })
+      survout$threshold <- threshold
+      out_list[[paste0(threshold)]] <- survout
+   # })
   }
 
 
@@ -257,69 +234,6 @@ run_survtmle3 <- function(tf, data_survival, covariates, failure_time, event_typ
   return(output)
 
 }
-
-
-run_survtmle3_control <- function(tf, data_survival, covariates, failure_time, event_type , weights, marker = NULL, nbins_time = 30, threshold_list) {
-
-  tf <- as.numeric(tf)
-
-  data_survival <- as.data.table(data_survival)
-
-  # effectivelly removed observations with no weights
-  data_survival <- (data_survival[, c(covariates, failure_time, event_type, marker, weights), with = FALSE ])
-
-
-  # discretize
-  time_grid <- unique(quantile(data_survival[[failure_time]], seq(0,1, length = nbins_time+1), type = 1))
-  # add time of interest to grid
-  time_grid <- sort(union(time_grid, tf))
-  failure_time_discrete <- findInterval(data_survival[[failure_time]], time_grid, all.inside = TRUE)
-  tf_discrete <- findInterval(tf, time_grid, all.inside = FALSE)
-  data_survival[[failure_time]] <-failure_time_discrete
-
-
-  treatment <- "treatment"
-
-
-  out_list <- list()
-  threshold = min(threshold_list)
-
-
-    data_survival[[treatment]] <- 1*(data_survival[[marker]] >= threshold)
-    if(sum(data_survival[[treatment]]) == 0){
-      print(dim(data_survival))
-      print(quantile(data_survival[[marker]]))
-      print(marker)
-      print(event_type)
-      stop("There were zero observation above the threshold. ")
-    }
-    #print(mean(1*(data_survival[[marker]] >= threshold)))
-
-    survout <- survtmle3_discrete(data_survival[[failure_time]], data_survival[[event_type]],
-                                  data_survival[[treatment]], data_survival[, covariates, with = FALSE],
-                                  weights = data_survival[[weights]],
-                                  learner.treatment =  learner.treatment,
-                                  learner.failure_time =  stack.failure,
-                                  learner.censoring_time = stack.censoring,
-                                  learner.event_type = learner.event_type,
-                                  target_failure_time = tf_discrete,
-                                  target_treatment = c(1),
-                                  target_event_type = 1,
-                                  failure_time.stratify_by_time = FALSE,
-                                  censoring_time.stratify_by_time = FALSE,
-                                  cross_fit = FALSE,
-                                  cross_validate = FALSE,
-                                  calibrate = FALSE,
-                                  verbose = TRUE, max_iter = 100,
-                                  tol = 1e-7
-    )
-
-
-  return(list(est = unlist(survout$estimates, use.names= FALSE), se = unlist(survout$se, use.names = FALSE)))
-
-
-}
-
 
 
 

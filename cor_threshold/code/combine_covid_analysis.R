@@ -19,6 +19,7 @@ all_outputs_single_by_deck <- list()
 for(marker in markers){
   for(deck in decks) {
     variant_type <- paste0("seq1.variant.hotdeck", deck)
+    print(variant_type)
     # for(variant in variant_names) {
     #
     #   variant_type <- paste0("seq1.variant.hotdeck", deck)
@@ -67,10 +68,10 @@ for(marker in markers){
       key <- paste0("output/vaccine_", marker_name, "_", failure_time, "_", event_type_target, ".RDS")
       print(key)
       variant_results <- readRDS(here::here(key))
-      print(variant_results$estimates)
+
       estimates_list[[variant_tgt]] <- variant_results$estimates
       estimates_monotone_list[[variant_tgt]] <- variant_results$estimates_monotone
-      print(length(variant_results$threshold))
+
       thresholds_all[[variant_tgt]] <-  variant_results$threshold
       thresholds_n_events[[variant_tgt]] <-  variant_results$n_events_in_bin
       se_list[[variant_tgt]] <-  variant_results$se
@@ -100,6 +101,7 @@ for(marker in markers){
       data.table(
         estimates = estimates_list[[variant]],
         estimates_mono = estimates_monotone_list[[variant]],
+        estimates_placebo = estimates_placebo_list[[variant]],
         thresholds = thresholds_all[[variant]],
         thresholds_n_events = thresholds_n_events[[variant]],
         se = se_list[[variant]],
@@ -168,8 +170,7 @@ for(marker in markers){
       variant_ref <- combo[2]
       index_ref <- match(variant_tgt, variant_names)
       index_reference <- match(variant_ref, variant_names)
-      print(index_ref)
-      print(index_reference)
+
       boot_ref <- boot_sample[, seq((index_ref-1)*num_thresh + 1, index_ref * num_thresh, 1)]
       boot_reference <- boot_sample[, seq((index_reference-1)*num_thresh + 1, index_reference * num_thresh, 1)]
 
@@ -191,7 +192,7 @@ for(marker in markers){
       thresholds_n_events_ref <- thresholds_n_events[seq((index_ref-1)*num_thresh + 1, index_ref * num_thresh, 1)]
       thresholds_n_events_reference <- thresholds_n_events[seq((index_reference-1)*num_thresh + 1, index_reference * num_thresh, 1)]
       thresholds_n_events_min <- pmin(thresholds_n_events_ref, thresholds_n_events_reference)
-      print(thresholds_n_events_min)
+
 
       # add how to choose variants
 
@@ -254,6 +255,9 @@ for(marker in markers){
   results_1_tmp <- results[[1]]
 
   combined_results <- rbindlist(lapply(seq_along(results_1_tmp), function(index) {
+    estimates_placebo <-  do.call(cbind, lapply(results, function(results_iter) {
+      results_iter[[index]]$estimates_placebo
+    }))
     estimates_MI <- do.call(cbind, lapply(results, function(results_iter) {
       results_iter[[index]]$estimates
     }))
@@ -270,9 +274,16 @@ for(marker in markers){
       data.frame(level = results_iter[[index]]$simult_level, quantile = results_iter[[index]]$simult_quantile)
     })))
 
+
+
     simult_CI_info <- simult_CI_info[, .(quantile = mean(quantile)), by = level]
 
     thresholds  <- results[[1]][[index]]$thresholds
+    # convert to VE, current version doesn't adjust for randomness in placebo estimate
+    estimates_MI <- 1 - estimates_MI / estimates_placebo
+    estimates_mono_MI <- 1 - estimates_mono_MI / estimates_placebo
+    se_MI <- se_MI / estimates_placebo
+
     estimates_comb <- rowMeans(estimates_MI)
     estimates_mono_comb <- rowMeans(estimates_mono_MI)
     thresholds_n_events <- rowMeans(thresholds_n_events_MI)

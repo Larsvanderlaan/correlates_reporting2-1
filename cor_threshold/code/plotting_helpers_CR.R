@@ -29,7 +29,7 @@ get_plot_CR <- function(marker, variant = "", simultaneous_CI = F, monotone = F,
 
 
   key <- marker
-  laby <- paste0("Probability of COVID")
+  laby <- paste0("Vaccine Efficacy")
   labx <- plotting_assay_label_generator(marker, above = TRUE)
   main <- plotting_assay_title_generator(marker)
   ident <- function(x) x
@@ -67,9 +67,9 @@ get_plot_CR <- function(marker, variant = "", simultaneous_CI = F, monotone = F,
   #print(cbind(CI_left,  estimates, CI_right))
   #print(standard_errors)
   #stop("hi")
-  CI_left <- pmax(CI_left, 0)
-  CI_right <- pmin(CI_right, 0.1)
-  estimates <- pmin(estimates, 0.1)
+  #CI_left <- pmax(CI_left, 0)
+  #CI_right <- pmin(CI_right, 0.1)
+  #estimates <- pmin(estimates, 0.1)
   plot_data <- data.table(thresholds = thresholds, est= estimates, se= standard_errors,
                           lower = CI_left, upper = CI_right)
   keep <- which(results$thresholds_n_events >= 5)
@@ -135,7 +135,7 @@ get_plot_CR <- function(marker, variant = "", simultaneous_CI = F, monotone = F,
     "figs", folder,
     paste0(append_start,  COR, "_", marker, "_", variant, append_end, "_level_", level, ".pdf")
   )
-
+  print(path)
   ggsave(
     filename = path,
     plot = plot, height = 7, width = 9
@@ -175,7 +175,7 @@ get_plot_CR_quotient <- function(marker, variant_tgt, variant_ref, simultaneous_
 
 
   key <- marker
-  laby <- paste0("Quotients of relative risks:", variant_tgt, " over ", variant_ref)
+  laby <- paste0("Quotients of relative probability:", variant_tgt, " over ", variant_ref)
   labx <- plotting_assay_label_generator(marker, above = TRUE)
   main <- plotting_assay_title_generator(marker)
   ident <- function(x) x
@@ -281,7 +281,7 @@ get_plot_CR_quotient <- function(marker, variant_tgt, variant_ref, simultaneous_
     "figs", folder,
     paste0(append_start,  COR, "_", marker, "_", variant_tgt, "_", variant_ref, append_end, "_level_", level, ".pdf")
   )
-
+  print(path)
   ggsave(
     filename = path,
     plot = plot, height = 7, width = 9

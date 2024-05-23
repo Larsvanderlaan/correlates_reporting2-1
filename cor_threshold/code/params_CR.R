@@ -8,7 +8,8 @@ decks <- 1:10
 # Numeric-coded region to subset by in "Region" variable of data.
 region_number <- 1
 # Variants/strains of interest for competing risk analysis.
-variant_names <- c("Ancestral.Lineage", "Mu", "Lambda", "Gamma")
+variant_names <- c("Ancestral.Lineage",  "Lambda",  "Mu", "Gamma")
+#variant_names <- c("Lambda")
 #variant_names <- "Gamma" # "Gamma"
 # Immune-response markers of interest for analysis.
 marker_bindSpike <-  paste0("Day29", c(
@@ -32,7 +33,7 @@ for(name in names(marker_bindSpike)) {
     data[[new_name]] <- data[[old_name]]
   }
 }
-markers <- c("Day29pseudoneutid50", "Day29bindSpike")
+markers <- c("Day29bindSpike")
 # Markers that differ for each competing variant of interest.
 # Example: For variant "variant" and imputation deck "deck", we use
 # the marker corresponding to the variable ``marker_name <- paste0(marker, "_", variant, "_", deck)".

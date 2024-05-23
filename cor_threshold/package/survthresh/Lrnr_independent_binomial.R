@@ -73,7 +73,6 @@ Lrnr_independent_binomial <- R6Class(
       for (Y_level in others) {
         # subset task to data in this category and reference
         sub_task <- bintask[Y %in% c(Y_level, reference)]
-
         fit_object[[Y_level]] <- binomial_learner$train(sub_task)
 
       }
@@ -102,9 +101,6 @@ Lrnr_independent_binomial <- R6Class(
       } else {
         raw_preds <- as.matrix(do.call(cbind, raw_preds))
       }
-
-      raw_preds <- pmin(raw_preds, 1 - 1e-10)
-      raw_preds <- pmax(raw_preds, 1e-10)
       # transform on exponential scale
       transformed <- exp(qlogis(raw_preds))
 

@@ -18,7 +18,7 @@ source(here::here("code", "plotting_helpers_CR.R"))
 
 for(marker in markers) {
   for(variant in variant_names) {
-    get_plot_CR(marker, variant = variant, simultaneous_CI = TRUE)
+    get_plot_CR(marker, variant = variant, monotone = FALSE)
     get_plot_CR(marker, variant = variant, monotone = TRUE)
     get_plot_CR(marker, variant = variant, monotone = TRUE, simultaneous_CI = TRUE, level = 0.8)
     get_plot_CR(marker, variant = variant, monotone = TRUE, simultaneous_CI = TRUE, level = 0.95)
